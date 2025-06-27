@@ -12,7 +12,7 @@ I’m thrilled to share **PowerEdit**, my very first open-source code editor pro
 
 1. Go to the section [**Releases**](https://github.com/tu_usuario/PowerEdit/releases) of this repository.  
 2. Download the latest version for your operating system (Windows, macOS, Linux).
-3.	 Run the .exe installer:
+3. Run the .exe installer:
    ```bash
    PowerEdit-Setup-v1.0.0.exe  # Windows
 
