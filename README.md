@@ -34,7 +34,6 @@ I’m thrilled to share **PowerEdit**, my very first open-source code editor pro
 
 ## ✨ Why PowerEdit Matters
 
-- **Rapid progress** in just 30 days of coding  
 - **Simple, intuitive UI** built with PyQt5  
 - **Fully customizable** via `.theme` and `.extend` files  
 - **Integrated Update Manager** keeps you on the latest version  
