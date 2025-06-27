@@ -52,7 +52,7 @@ extra:
 
 nav:
   - Home: index.md
-  - Instalación:
+  - Install:
       - Getting Started: installation/getting_started.md
       - Update Manager: installation/update_manager.md
   - User Manual:
