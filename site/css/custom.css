@@ -1,25 +1,25 @@
-/* ─── 1. Fondo general ───────────────────────────────────────────────────── */
+/* ─── 1. Fondo general ─────────────────────────────────────────────── */
 html, body, .md-main, .md-content, .md-content__inner {
   background: #121212 !important;
   color: #e0e0e0 !important;
-  margin: 0; padding: 0;
+  margin: 0;
+  padding: 0;
+  box-shadow: none !important;
 }
 
-/* ─── 2. Cabecera (Header) ───────────────────────────────────────────────── */
+/* ─── 2. Cabecera ──────────────────────────────────────────────────── */
 .md-header, 
 .md-header__inner {
   background: #1e1e1e !important;
   border-bottom: none !important;
   box-shadow: none !important;
 }
-
 .md-header__panel {
   display: flex;
   align-items: center;
 }
 .md-header__panel .md-logo {
   max-height: 2.5rem !important;
-  filter: none !important;
 }
 .md-header__panel .md-header-nav__title {
   color: #e0e0e0 !important;
@@ -27,27 +27,20 @@ html, body, .md-main, .md-content, .md-content__inner {
   margin-left: 0.5rem !important;
 }
 
-/* ─── 3. Sidebar izquierdo fijo ─────────────────────────────────────────── */
+/* ─── 3. Sidebar (estático, scroll interno) ────────────────────────── */
 .md-sidebar--primary {
-  position: fixed !important;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 300px;
-  overflow-y: auto;
   background: #1e1e1e !important;
   border-right: 1px solid #333 !important;
   box-shadow: none !important;
+  margin-top: 0 !important;
+}
+.md-sidebar__scrollwrap {
   padding-top: 0 !important;
-  z-index: 100;
+  padding-bottom: 1rem !important;
+  overflow-y: auto !important;
 }
 
-/* Evita espacio innecesario arriba del menú */
-.md-sidebar--primary .md-sidebar__scrollwrap {
-  padding-top: 0 !important;
-}
-
-/* Estilos de los enlaces del menú */
+/* Enlaces del menú */
 .md-sidebar--primary .md-nav__link {
   color: #cfcfcf !important;
   padding: 0.5rem 1rem !important;
@@ -56,45 +49,96 @@ html, body, .md-main, .md-content, .md-content__inner {
   transition: background 0.2s ease !important;
 }
 .md-sidebar--primary .md-nav__link:hover {
-  background: #333333 !important;
-  color: #ffffff !important;
+  background: #333 !important;
+  color: #fff !important;
 }
 .md-sidebar--primary .md-nav__link--active {
   background: #3f51b5 !important;
   color: #fff !important;
 }
 
-/* ─── 4. Ajustar contenido principal ─────────────────────────────────────── */
-.md-main {
-  margin-left: 300px !important;
-}
-.md-main__inner {
-  margin: 1rem !important;
-  padding: 2rem !important;
-  background: #1e1e1e !important;
+/* ─── 4. Sidebar secundario (Table of contents) ────────────────────── */
+.md-sidebar--secondary {
+  background: transparent !important;
   box-shadow: none !important;
-  border-radius: 6px !important;
+}
+.md-sidebar--secondary .md-nav__link {
+  color: #bbb !important;
+}
+.md-sidebar--secondary .md-nav__link--active {
+  color: #fff !important;
 }
 
-/* ─── 5. Títulos dentro del contenido ───────────────────────────────────── */
+/* ─── 5. Contenido principal ───────────────────────────────────────── */
+
+/* Escritorio: expandir, más ancho y centrar */
+@media (min-width: 1025px) {
+  .md-content {
+    max-width: 100% !important;
+  }
+
+  .md-main__inner {
+    max-width: 1600px !important;
+    margin: 0 auto !important;
+    padding: 2rem !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Móviles: restaurar padding normal */
+@media (max-width: 1024px) {
+  .md-content {
+    padding: 1rem !important;
+  }
+
+  .md-main__inner {
+    max-width: none !important;
+    padding: 1rem !important;
+    margin: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+}
+
+/* ─── 6. Eliminar sombras y fondos extra ───────────────────────────── */
+.md-content__inner,
+.md-content__inner::before,
+.md-content__inner > .md-typeset,
+.md-elevation--1,
+.md-shadow,
+.md-typeset .md-card,
+.md-nav__list,
+.md-nav__group,
+.md-nav__item,
+.md-footer,
+.md-footer__inner {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ─── 7. Títulos ───────────────────────────────────────────────────── */
 .md-typeset h1,
 .md-typeset h2 {
+  background: transparent !important;
+  box-shadow: none !important;
   border-left: 4px solid #3f51b5 !important;
   padding-left: 0.5rem !important;
   margin-top: 1.5rem !important;
   color: #e0e0e0 !important;
 }
 
-/* ─── 6. Admonitions ─────────────────────────────────────────────────────── */
+/* ─── 8. Admonitions ───────────────────────────────────────────────── */
 .admonition {
   background: #2a2a2a !important;
   border-left: 4px solid #3f51b5 !important;
   padding: 1rem !important;
   border-radius: 4px !important;
   color: #ccc !important;
+  box-shadow: none !important;
 }
 
-/* ─── 7. Bloques de código ───────────────────────────────────────────────── */
+/* ─── 9. Bloques de código ────────────────────────────────────────── */
 .md-typeset pre,
 .highlight pre {
   background: #222 !important;
@@ -103,6 +147,7 @@ html, body, .md-main, .md-content, .md-content__inner {
   border-radius: 4px !important;
   padding: 1rem !important;
   overflow-x: auto !important;
+  box-shadow: none !important;
 }
 .md-typeset code {
   background: #333 !important;
@@ -111,14 +156,13 @@ html, body, .md-main, .md-content, .md-content__inner {
   border-radius: 3px !important;
 }
 
-/* ─── 8. Layout con columna lateral adicional ───────────────────────────── */
+/* ─── 10. Dos columnas (opcional) ───────────────────────────────────── */
 .two-column {
   display: grid;
   grid-template-columns: 1fr 240px;
   gap: 2rem;
   align-items: start;
 }
-
 .sidebar-column.quick-links {
   position: static !important;
   width: auto !important;
@@ -126,20 +170,10 @@ html, body, .md-main, .md-content, .md-content__inner {
   border: 1px solid #333 !important;
   border-radius: 8px !important;
   padding: 1.5rem !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+  box-shadow: none !important;
   color: #eee !important;
 }
-
-/* ─── 9. Responsividad ───────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .md-sidebar--primary {
-    position: static !important;
-    width: auto !important;
-    height: auto !important;
-  }
-  .md-main {
-    margin-left: 0 !important;
-  }
   .two-column {
     display: block;
   }
@@ -148,12 +182,8 @@ html, body, .md-main, .md-content, .md-content__inner {
   }
 }
 
-/* ─── 10. Eliminar texto "Made with Material for MkDocs" ─────────────────── */
+/* ─── 11. Footer limpio ─────────────────────────────────────────────── */
 .md-footer__powered-by,
 .md-legacy-footer__powered-by {
-  visibility: hidden !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
+  display: none !important;
 }
