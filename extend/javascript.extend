@@ -1,0 +1,63 @@
+{
+  "extensions": ["js", "jsx", "mjs"],
+  "keywords": [
+    "break", "case", "catch", "class", "const", "continue", "debugger",
+    "default", "delete", "do", "else", "export", "extends", "finally",
+    "for", "function", "if", "import", "in", "instanceof", "let", "new",
+    "return", "super", "switch", "this", "throw", "try", "typeof", "var",
+    "void", "while", "with", "yield", "async", "await", "of"
+  ],
+  "builtins": [
+    "console", "window", "document", "globalThis", "Math", "JSON", "Promise",
+    "Reflect", "Atomics", "SharedArrayBuffer", "URL", "URLSearchParams",
+    "TextEncoder", "TextDecoder", "Intl", "WebAssembly"
+  ],
+  "types": [
+    "Number", "String", "Boolean", "Object", "Array", "Map", "Set",
+    "WeakMap", "WeakSet", "Promise", "Symbol", "BigInt", "Date", "RegExp",
+    "Function", "Error", "EvalError", "RangeError", "ReferenceError",
+    "SyntaxError", "TypeError", "URIError"
+  ],
+  "constants": [
+    "undefined", "null", "NaN", "Infinity"
+  ],
+  "methods": [
+    "push", "pop", "shift", "unshift", "slice", "splice", "forEach",
+    "map", "filter", "reduce", "find", "findIndex", "includes", "indexOf",
+    "concat", "join", "reverse", "sort", "every", "some",
+    "charAt", "charCodeAt", "concat", "includes", "endsWith", "indexOf",
+    "lastIndexOf", "match", "replace", "search", "slice", "split",
+    "startsWith", "substring", "toLowerCase", "toUpperCase", "trim",
+    "keys", "values", "entries", "assign", "create", "freeze",
+    "seal", "getOwnPropertyNames", "hasOwnProperty"
+  ],
+  "functions": [
+    "parseInt", "parseFloat", "encodeURI", "decodeURI",
+    "encodeURIComponent", "decodeURIComponent", "isNaN", "isFinite",
+    "eval", "setTimeout", "setInterval", "clearTimeout", "clearInterval"
+  ],
+  "module_pattern": "[A-Za-z_$][A-Za-z0-9_$]*(?:\\.[A-Za-z_$][A-Za-z0-9_$]*)*",
+  "function_pattern": "\\b[A-Za-z_$][A-Za-z0-9_$]*\\s*(?=\\()",
+  "comment_pattern": "//.*|/\\*[\\s\\S]*?\\*/",
+  "string_patterns": [
+    "\"(\\\\.|[^\"\\\\])*\"",
+    "'(\\\\.|[^'\\\\])*'",
+    "`(\\\\.|[^`\\\\])*`"
+  ],
+  "multi_line_strings": [
+    {
+      "start": "`",
+      "end": "`"
+    }
+  ],
+  "colors": {
+    "keyword":  "#C586C0",
+    "builtin":  "#4EC9B0",
+    "type":     "#8BE9FD",
+    "constant": "#BD93F9",
+    "comment":  "#6A9955",
+    "string":   "#CE9178",
+    "function": "#DCDCAA",
+    "module":   "#50FA7B"
+  }
+}

@@ -1,0 +1,234 @@
+/* ========== Main Window ========== */
+QMainWindow {
+    background-color: #1e1e1e;
+}
+ 
+/* Menu Bar */
+QMenuBar { 
+    background-color: #2c2c2c;
+    color: white;
+    font-family: Consolas, monospace;
+}
+QMenuBar::item {
+    background-color: #2c2c2c;
+    color: white;
+    padding: 4px 10px;
+}
+QMenuBar::item:selected {
+    background-color: #444;
+}
+
+/* Menus */
+QMenu {
+    background-color: #2c2c2c;
+    color: white;
+    border: 1px solid #555;
+    font-family: Consolas, monospace;
+}
+QMenu::item:selected {
+    background-color: #5555aa;
+}
+
+/* Tabs */
+QTabWidget::pane {
+    border: 1px solid #444;
+    top: -1px;
+    background: #282A36;
+}
+QTabBar::tab {
+    background: #2c2c2c;
+    color: white;
+    padding: 6px 12px;
+    border: 1px solid #444;
+    border-bottom: none;
+    font-family: Consolas, monospace;
+    min-width: 60px;
+    max-width: 320px;
+}
+QTabBar::tab:selected {
+    background: #44475A;
+    color: #F8F8F2;
+}
+QTabBar::tab:hover {
+    background: #3c3c3c;
+}
+QTabBar::close-button {
+    background: #ff5555;
+    subcontrol-position: right;
+    border-radius: 4px;
+    padding: 4px;
+}
+QTabBar::close-button:hover {
+    background: #ff5555;
+}
+
+/* Tooltips */
+QToolTip {
+    background-color: #2c2c2c;
+    color: #F8F8F2;
+    border: 1px solid #555;
+}
+
+/* ========== Dock (Explorador) ========== */
+QDockWidget {
+    background-color: #1e1e1e;
+}
+QDockWidget::title {
+    background-color: #44475A;
+    color: white;
+    padding: 4px;
+    font-family: Consolas, monospace;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+QDockWidget::close-button, QDockWidget::float-button {
+    background-color: #6272A4;
+    border: none;
+    border-radius: 3px;
+}
+QDockWidget::close-button:hover, QDockWidget::float-button:hover {
+    background-color: #7083C6;
+}
+
+/* ========== File Explorer (QTreeView) ========== */
+QTreeView {
+    border: none;
+    background-color: #1e1e1e;
+    color: white;
+    font-family: Consolas, monospace;
+}
+QTreeView::item:hover {
+    background-color: #3c3c3c;
+}
+QTreeView::item:selected {
+    background-color: #44475A;
+    color: white;
+}
+
+/* ========== File Explorer Label ========== */
+QLabel {
+    color: white;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+}
+
+/* ========== File Explorer Button ========== */
+QPushButton {
+    background-color: #44475A;
+    color: white;
+    padding: 4px 8px;
+    border: none;
+    border-radius: 2px;
+    font-family: Consolas, monospace;
+}
+QPushButton:hover {
+    background-color: #6272A4;
+}
+
+/* ========== Autocomplete Suggestions (QListWidget) ========== */
+QListWidget {
+    background-color: #2c2c2c;
+    color: white;
+    border: 1px solid #555;
+    font-family: Consolas, monospace;
+    font-size: 11px;
+}
+QListWidget::item {
+    color: white;
+    padding: 1px;
+}
+QListWidget::item:selected {
+    background-color: #5555aa;
+    color: white;
+}
+QListWidget::item:hover {
+    background-color: #444;
+}
+
+/* ========== Code Editor ========== */
+QPlainTextEdit {
+    background-color: #1e1e1e;;
+    color: #F8F8F2;
+    selection-background-color: #44475A;
+    border: none;
+}
+QLineEdit {
+    background-color: #1e1e1e;;
+    color: #F8F8F2;
+    font-family: Consolas, monospace;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #44475A;
+    padding: 6px 8px;
+    margin-bottom: 12px;
+}
+QDialog 
+{
+    background-color: #1e1e1e;
+}
+QLabel 
+{
+    color: white;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+}
+QPushButton 
+{
+    background-color: #44475A;
+    color: white;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-family: Consolas, monospace;
+}
+QPushButton:hover {
+    background-color: #6272A4;
+}
+/* Scrollbars */
+QScrollBar:vertical, QScrollBar:horizontal {
+    background: #2c2c2c;
+    border-radius: 4px;
+    width: 10px;
+    height: 10px;
+    margin: 0px;
+}
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+    background: #44475A;
+    border-radius: 4px;
+    min-height: 20px;
+    min-width: 20px;
+}
+QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
+    background: #6272A4;
+}
+
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+    background: #44475A;
+    border-radius: 4px;
+}
+QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
+    background: #6272A4;
+}
+QProgressDialog {
+    background-color: #282A36;
+    color: #F8F8F2;
+    font-family: "Fira Code";
+    font-size: 12pt;
+}
+QProgressBar {
+    background-color: #44475A;
+    color: #F8F8F2;
+    border-radius: 5px;
+}
+QProgressBar::chunk {
+    background-color: #50fa7b;
+}
+/* Aplica sólo a widgets de texto como consola */
+QPlainTextEdit, QTextEdit {
+    background: transparent;
+    background-color: #1e1e1e;
+    border: none;
+}
+
+@font-family: Cascadia Code;
+@font-size: 12px;
+@icon-color: default;

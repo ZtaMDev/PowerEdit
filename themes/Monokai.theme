@@ -1,0 +1,197 @@
+QMainWindow {
+    background-color: #272822;
+}
+QMenuBar, QMenu {
+    background-color: #3e3d32;
+    color: #f8f8f2;
+    font-family: Consolas, monospace;
+}
+QMenuBar::item, QMenu::item {
+    padding: 4px 10px;
+}
+QMenuBar::item:selected, QMenu::item:selected {
+    background-color: #75715e;
+}
+QTabWidget::pane {
+    border: 1px solid #444;
+    background: #272822;
+}
+QTabBar::tab {
+    background: #3e3d32;
+    color: #f8f8f2;
+    padding: 6px 12px;
+    border: 1px solid #444;
+}
+QTabBar::tab:selected {
+    background: #49483e;
+    color: #f8f8f2;
+}
+QTabBar::tab:hover {
+    background: #75715e;
+}
+QTabBar::close-button {
+    background: #f92672;
+    border-radius: 4px;
+    padding: 4px;
+}
+QTabBar::close-button:hover {
+    background: #ff79c6;
+}
+QToolTip {
+    background-color: #3e3d32;
+    color: #f8f8f2;
+    border: 1px solid #555;
+}
+QDockWidget {
+    background-color: #272822;
+}
+QDockWidget::title {
+    background-color: #49483e;
+    color: white;
+    padding: 4px;
+    font-family: Consolas, monospace;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+QDockWidget::close-button, QDockWidget::float-button {
+    background-color: #66d9ef;
+    border: none;
+    border-radius: 3px;
+}
+QDockWidget::close-button:hover, QDockWidget::float-button:hover {
+    background-color: #a6e22e;
+}
+QTreeView {
+    background-color: #272822;
+    color: #f8f8f2;
+    font-family: Consolas, monospace;
+}
+QTreeView::item:hover {
+    background-color: #49483e;
+}
+QTreeView::item:selected {
+    background-color: #66d9ef;
+    color: #272822;
+}
+QScrollBar:vertical, QScrollBar:horizontal {
+    background: #3e3d32;
+    border-radius: 4px;
+    width: 10px;
+    height: 10px;
+}
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+    background: #75715e;
+    border-radius: 4px;
+}
+QLabel {
+    color: #f8f8f2;
+    font-family: Consolas, monospace;
+}
+QPushButton {
+    background-color: #66d9ef;
+    color: #272822;
+    border-radius: 3px;
+    padding: 4px 8px;
+}
+QPushButton:hover {
+    background-color: #a6e22e;
+}
+QListWidget {
+    background-color: #3e3d32;
+    color: #f8f8f2;
+    font-family: Consolas, monospace;
+}
+QListWidget::item:selected {
+    background-color: #66d9ef;
+    color: #272822;
+}
+QPlainTextEdit {
+    background-color: #272822;
+    color: #f8f8f2;
+    selection-background-color: #49483e;
+    border: none;
+}
+QTreeView {
+    background-color: #272822;
+    color: #f8f8f2;
+    font-family: Consolas, monospace;
+    border: none;
+}
+QTreeView::item:hover {
+    background-color: #3e3d32;
+}
+QTreeView::item:selected {
+    background-color: #49483e;
+    color: #f8f8f2;
+}
+@icon-color: #F8F8F2;
+QScrollBar:vertical, QScrollBar:horizontal {
+    background: #3e3d32;
+    border-radius: 4px;
+    width: 10px;
+    height: 10px;
+}
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+    background: #75715e;
+    border-radius: 4px;
+}
+QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
+    background: #a59f85;
+}
+QPlainTextEdit {
+    background-color: #1e1e1e;
+    color: #f8f8f2;            /* texto blanco marfil */
+    font-family: Consolas, monospace;
+    border: none;
+}
+
+QLineEdit {
+    background-color: #3e3d32;
+    color: #f8f8f2;
+    font-family: Consolas, monospace;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #75715e;
+    padding: 6px 8px;
+    margin-bottom: 12px;
+}
+/* ========== Dialogs ========== */
+QDialog {
+    background-color: #1e1e1e;
+}
+QDialog QLabel {
+    color: white;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+}
+QDialog QPushButton {
+    background-color: #3e3d32;
+    color: white;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-family: Consolas, monospace;
+}
+QDialog QPushButton:hover {
+    background-color:rgb(126, 124, 102);
+}
+QPlainTextEdit, QTextEdit {
+    background: transparent;
+    border: none;
+}
+QProgressDialog {
+    background-color: #282A36;
+    color: #F8F8F2;
+    font-family: "Fira Code";
+    font-size: 12pt;
+}
+QProgressBar {
+    background-color: #44475A;
+    color: #F8F8F2;
+    border-radius: 5px;
+}
+QProgressBar::chunk {
+    background-color: #50fa7b;
+}
+@font-family: Cascadia Code;
+@font-size: 12px;
+@icon-color: #F8F8F2;

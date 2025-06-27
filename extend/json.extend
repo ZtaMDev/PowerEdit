@@ -1,0 +1,29 @@
+{
+  "extensions": ["json"],
+  "keywords": [],
+  "builtins": [],
+  "types": [
+    "true",
+    "false",
+    "null"
+  ],
+  "constants": [],
+  "methods": [],
+  "functions": [],
+  "modules": [],
+  "comment_pattern": "//.*|/\\*[\\s\\S]*?\\*/",
+  "string_patterns": [
+    "\"(\\\\.|[^\"\\\\])*\""
+  ],
+  "multi_line_strings": [],
+  "colors": {
+    "keyword":   "#FF79C6",
+    "builtin":   "#BD93F9",
+    "type":      "#8BE9FD",
+    "constant":  "#BD93F9",
+    "comment":   "#6272A4",
+    "string":    "#F1FA8C",
+    "function":  "#50FA7B",
+    "module":    "#2AA198"
+  }
+}

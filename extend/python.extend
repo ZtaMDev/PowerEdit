@@ -1,0 +1,76 @@
+{
+  "extensions": ["py"],
+  "keywords": [
+    "False", "None", "True", "and", "as", "assert", "async", "await",
+    "break", "class", "continue", "def", "del", "elif", "else", "except",
+    "finally", "for", "from", "global", "if", "import", "in", "is",
+    "lambda", "nonlocal", "not", "or", "pass", "raise", "return",
+    "try", "while", "with", "yield", "match", "case", "_", "type"
+  ],
+  "builtins": [
+    "__build_class__", "__import__", "abs", "aiter", "all", "anext",
+    "any", "ascii", "bin", "bool", "breakpoint", "bytearray", "bytes",
+    "callable", "chr", "classmethod", "compile", "complex", "delattr",
+    "dict", "dir", "divmod", "enumerate", "eval", "exec", "filter",
+    "float", "format", "frozenset", "getattr", "globals", "hasattr",
+    "hash", "help", "hex", "id", "input", "int", "isinstance",
+    "issubclass", "iter", "len", "list", "locals", "map", "max", "memoryview",
+    "min", "next", "object", "oct", "open", "ord", "pow", "print",
+    "property", "range", "repr", "reversed", "round", "set", "setattr",
+    "slice", "sorted", "staticmethod", "str", "sum", "super", "tuple",
+    "type", "vars", "zip"
+  ],
+  "modules": [
+    "abc", "aifc", "argparse", "array", "ast", "asynchat", "asyncio",
+    "asyncore", "base64", "binascii", "bisect", "bz2", "calendar", "cgi",
+    "cgitb", "chunk", "cmath", "cmd", "code", "codecs", "collections",
+    "collections.abc", "concurrent.futures", "contextlib", "contextvars",
+    "copy", "copyreg", "crypt", "csv", "ctypes", "datetime", "decimal",
+    "difflib", "dis", "doctest", "email", "email.charset", "email.contentmanager",
+    "email.encoders", "email.errors", "email.generator", "email.header",
+    "enum", "faulthandler", "filecmp", "fileinput", "fnmatch", "formatter",
+    "fractions", "functools", "gc", "getopt", "getpass", "gettext", "glob",
+    "graphlib", "gzip", "hashlib", "heapq", "hmac", "html", "html.parser",
+    "http", "imaplib", "imghdr", "imp", "importlib", "inspect", "io",
+    "ipaddress", "itertools", "json", "keyword", "linecache", "locale",
+    "logging", "lzma", "mailbox", "mailcap", "marshal", "math", "mimetypes",
+    "multiprocessing", "pathlib", "pickle", "platform", "plistlib", "poplib",
+    "pprint", "profile", "pstats", "py_compile", "queue", "random", "re",
+    "readline", "reprlib", "resource", "sched", "secrets", "select",
+    "selectors", "shelve", "shlex", "shutil", "signal", "site", "smtpd",
+    "sndhdr", "socket", "socketserver", "sqlite3", "ssl", "stat", "statistics",
+    "string", "stringprep", "struct", "subprocess", "sys", "sysconfig",
+    "tabnanny", "tarfile", "tempfile", "termios", "textwrap", "threading",
+    "time", "timeit", "tkinter", "token", "tokenize", "trace", "traceback",
+    "tty", "typing", "unittest", "urllib", "uu", "uuid", "venv", "warnings",
+    "wave", "weakref", "webbrowser", "xml", "xml.etree.ElementTree", "xml.parsers.expat",
+    "xmlrpc", "zipapp", "zipfile", "zlib"
+  ],
+  "comment_pattern": "#.*",
+  "string_patterns": [
+    "\"(\\\\.|[^\"\\\\])*\"",
+    "'(\\\\.|[^'\\\\])*'"
+  ],
+  "multi_line_strings": [
+    {
+      "start": "\"\"\"",
+      "end": "\"\"\""
+    },
+    {
+      "start": "'''",
+      "end": "'''"
+    }
+  ],
+  "function_pattern": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\s*(?=\\()",
+  "module_pattern": "[A-Za-z_]\\w*",
+  "colors": {
+    "keyword":  "#C586C0",
+    "builtin":  "#4EC9B0",
+    "module":   "#50FA7B",
+    "comment":  "#6A9955",
+    "string":   "#CE9178",
+    "function": "#DCDCAA",
+    "self":     "#9CDCFE"
+  }
+
+}

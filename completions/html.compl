@@ -1,0 +1,19 @@
+{
+  "selfClosing": [
+    "area", "base", "br", "col", "embed",
+    "hr", "img", "input", "link", "meta",
+    "source", "track", "wbr"
+  ],
+  "nonClosing": [
+    "html", "head", "body", "title", "style", "script",
+    "noscript", "template", "slot", "div", "span", "header", "footer", "main", "section",
+    "article", "nav", "aside", "h1", "h2", "h3", "h4", "h5", "h6", "p", "a", "ul", "ol",
+    "li", "dl", "dt", "dd", "figure", "figcaption", "blockquote", "pre", "code",
+    "em", "strong", "small", "sub", "sup", "mark", "abbr", "cite", "q", "time", "data",
+    "address", "bdi", "bdo", "details", "summary", "dialog", "fieldset", "legend", "label",
+    "form", "textarea", "button", "select", "option", "optgroup", "output", "progress",
+    "meter", "iframe", "canvas", "video", "audio", "object", "param", "picture",
+    "svg", "math", "del", "ins", "map", "caption", "table", "thead", "tbody", "tfoot",
+    "tr", "td", "th", "colgroup"
+  ]
+}

@@ -1,0 +1,4 @@
+PyQt5>=5.15.17
+PyQtWebEngine>=5.15.17
+pyte>=0.8.2
+pyqt5-tools>=5.15.9
