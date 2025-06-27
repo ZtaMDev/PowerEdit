@@ -73,6 +73,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#autocompletion" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -427,6 +432,21 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Autocompletion
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -439,6 +459,58 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      How It Works
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How It Works">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supported-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supported Categories
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source-of-suggestions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Source of Suggestions
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -741,6 +813,49 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      How It Works
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How It Works">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supported-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supported Categories
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source-of-suggestions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Source of Suggestions
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -756,9 +871,85 @@
 
 
 
-  <h1>Autocompletion</h1>
-
-
+<h1 id="autocompletion">Autocompletion<a class="headerlink" href="#autocompletion" title="Permanent link">&para;</a></h1>
+<p>The <strong>autocompletion</strong> feature is a standard element in code editors, and PowerEdit includes its own implementation to help you write code faster and more accurately.</p>
+<p><img alt="Update Prompt" src="../assets/images/autoc.png" /></p>
+<h2 id="how-it-works">How It Works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
+<p>The autocompletion system works by extracting keywords and values from the installed <code>.extend</code> files. These files define language-specific data and are selected based on the active file type and syntax mode.</p>
+<blockquote>
+<p><strong>Note:</strong> Autocompletion in PowerEdit is still under development and has some limitations. It does <strong>not</strong> currently suggest words based on context, and it does <strong>not</strong> trigger correctly when typing next to characters like <code>&lt;</code>,  <code>&gt;</code>,  <code>;</code>,  <code>=</code>,  or  <code>:</code>.</p>
+</blockquote>
+<p>Each recognized value type is paired with a small icon to help differentiate it. The system currently supports the following value types:</p>
+<h3 id="supported-categories">Supported Categories<a class="headerlink" href="#supported-categories" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+<th>Example(s)</th>
+<th>Icon(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>extensions</code></td>
+<td>File types associated with the syntax</td>
+<td><code>.py</code>, <code>.html</code>, <code>.css</code></td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>keywords</code></td>
+<td>Language-specific keywords</td>
+<td><code>def</code>, <code>if</code>, <code>return</code></td>
+<td><p align="center"><img src="../assets/images/keyword.svg" width="50"></p></td>
+</tr>
+<tr>
+<td><code>builtins</code></td>
+<td>Built-in functions or methods</td>
+<td><code>abs()</code>, <code>format()</code></td>
+<td><p align="center"><img src="../assets/images/builtin.svg" width="50"></p></td>
+</tr>
+<tr>
+<td><code>modules</code></td>
+<td>Standard or third-party libraries</td>
+<td><code>os</code>, <code>sys</code>, <code>math</code></td>
+<td><p align="center"><img src="../assets/images/module.svg" width="50"></p></td>
+</tr>
+<tr>
+<td><code>types</code></td>
+<td>Data or syntax types</td>
+<td><code>int</code>, <code>float</code>, <code>str</code></td>
+<td><p align="center"><img src="../assets/images/type.svg" width="50"></p></td>
+</tr>
+<tr>
+<td><code>values</code></td>
+<td>Common values (e.g. in CSS)</td>
+<td><code>5px</code>, <code>auto</code>, <code>block</code></td>
+<td><p align="center"><img src="../assets/images/value.svg" width="50"></p></td>
+</tr>
+<tr>
+<td><code>color_names</code></td>
+<td>Color values recognized by the syntax (CSS)</td>
+<td><code>white</code>, <code>red</code>, <code>blue</code></td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>functions</code></td>
+<td>Functions dynamically detected in your own code</td>
+<td><code>my_function()</code>, etc.</td>
+<td><p align="center"><img src="../assets/images/function.svg" width="50"></p></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note:</strong> In future updates, you will be able to define your own autocomplete entries for external modules, improving support for libraries and frameworks.</p>
+</blockquote>
+<h2 id="source-of-suggestions">Source of Suggestions<a class="headerlink" href="#source-of-suggestions" title="Permanent link">&para;</a></h2>
+<p>All suggestions come from:
+- The currently selected language
+- The active file type (e.g., <code>.py</code>, <code>.html</code>, <code>.css</code>)
+- The <code>.extend</code> file associated with that language</p>
+<p>→ <a href="../../extend/getting_started/">Learn more about <code>.extend</code> files and how to define autocomplete values</a></p>
 
 
 
