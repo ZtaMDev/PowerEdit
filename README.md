@@ -7,6 +7,9 @@ I’m thrilled to share **PowerEdit**, my very first open-source code editor pro
 - **Report** any bugs or quirks you encounter  
 
 ---
+## Documentation
+- Power Edit now have [**Documentation**](https://ztamdev.github.io/PowerEdit/)
+---
 
 ## 📥 How to download PowerEdit
 
