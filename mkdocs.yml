@@ -1,8 +1,17 @@
 site_name: PowerEdit Documentation
 site_url: https://ZtaMDev.github.io/PowerEdit/
 
+# ← ESTA LÍNEA le dice a MkDocs que lea todos tus .md de docs/
 docs_dir: docs
 
+extra_css:
+  - css/custom.css
+
+theme:
+  name: material
+  # …
+
+site_dir: site
 extra_css:
   - css/custom.css
 
@@ -45,6 +54,7 @@ nav:
   - Home: index.md
   - Instalación:
       - Getting Started: installation/getting_started.md
+      - Update Manager: installation/update_manager.md
   - Manual de Uso:
       - Getting Started: usage/getting_started.md
   - Edición de .theme:
