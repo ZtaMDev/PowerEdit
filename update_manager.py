@@ -21,7 +21,7 @@ def get_download_dir():
 
 
 UPDATE_BASENAME = "PowerEdit-Setup"
-# Hilo para buscar actualizaciones (ya lo tenías)
+# Hilo para buscar actualizacione
 class UpdaterThread(QThread):
     log         = pyqtSignal(str)
     new_version= pyqtSignal(str)
@@ -80,7 +80,7 @@ class InstallerThread(QThread):
         self.version = version
 
     def run(self):
-        base = get_download_dir()               # ya no usamos Program Files
+        base = get_download_dir()
         fname = f"{UPDATE_BASENAME}-v{self.version}.exe"
         path  = os.path.join(base, fname)
         try:
