@@ -1,15 +1,4 @@
-> **Hola!**  
-> Estoy muy orgulloso de lanzar este proyecto, pues lo llevo desarrollando 1 mes y ha avanzado muchísimo en mi opinión.  
-> Por eso lo subo a GitHub para que todos puedan usarlo. El editor funciona bastante bien y quiero que me ayuden a mejorarlo lo más posible,  
-> ya que es mi primer proyecto open source de este tipo y quiero llevarlo al siguiente nivel.  
->  
-> Cuenta con un **Update Manager** que actualizará el editor a la última versión,  
-> y un **gestor de descargas de código fuente**: desde la sección **Help → Download Source** puedes descargar todo el código para su edición.  
-> (Recomiendo usar VS Code en lugar de PowerEdit para editar, pues aún hay algunos conflictos de indentación.)  
->  
-> Con vuestra ayuda espero resolver esos detalles, añadir nuevas funcionalidades y, en breve, incorporar IA… ¡de forma completamente gratuita!  
-
-# 🚀 PowerEdit
+# PowerEdit
 
 I’m thrilled to share **PowerEdit**, my very first open-source code editor project. After a month of intense development, it’s matured into something I’m proud of. Here on GitHub, you can:
 
@@ -23,7 +12,7 @@ I’m thrilled to share **PowerEdit**, my very first open-source code editor pro
 
 1. Ve a la sección [**Releases**](https://github.com/tu_usuario/PowerEdit/releases) de este repositorio.  
 2. Descarga la última versión para tu sistema operativo (Windows, macOS, Linux).  
-3. Descomprime el ZIP (si aplica) y ejecuta el instalador:  
+3. Descomprime el .exe y ejecuta el instalador:  
    ```bash
    PowerEdit-Setup-v1.0.0.exe  # Windows
 
@@ -69,3 +58,14 @@ I’m thrilled to share **PowerEdit**, my very first open-source code editor pro
 - **Cross-platform installers** (Windows, macOS, Linux)  
 
 Thank you for joining this journey—let’s make PowerEdit even better together! 🎉  
+
+> **Hola!**  
+> Estoy muy orgulloso de lanzar este proyecto, pues lo llevo desarrollando 1 mes y ha avanzado muchísimo en mi opinión.  
+> Por eso lo subo a GitHub para que todos puedan usarlo. El editor funciona bastante bien y quiero que me ayuden a mejorarlo lo más posible,  
+> ya que es mi primer proyecto open source de este tipo y quiero llevarlo al siguiente nivel.  
+>  
+> Cuenta con un **Update Manager** que actualizará el editor a la última versión,  
+> y un **gestor de descargas de código fuente**: desde la sección **Help → Download Source** puedes descargar todo el código para su edición.  
+> (Recomiendo usar VS Code en lugar de PowerEdit para editar, pues aún hay algunos conflictos de indentación.)  
+>  
+> Con vuestra ayuda espero resolver esos detalles, añadir nuevas funcionalidades y, en breve, incorporar IA… ¡de forma completamente gratuita!  
