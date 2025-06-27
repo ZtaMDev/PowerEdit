@@ -73,6 +73,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#editor" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -404,6 +409,21 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Editor
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -416,6 +436,67 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-display" class="md-nav__link">
+    <span class="md-ellipsis">
+      File Display
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tab-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tab System
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layout-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      Layout System
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -741,6 +822,58 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-display" class="md-nav__link">
+    <span class="md-ellipsis">
+      File Display
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tab-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tab System
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layout-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      Layout System
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -756,9 +889,30 @@
 
 
 
-  <h1>Editor</h1>
-
-
+<h1 id="editor">Editor<a class="headerlink" href="#editor" title="Permanent link">&para;</a></h1>
+<p>The <strong>Editor</strong> is the core component of PowerEdit, designed with the essential features of a modern code editor. It includes a clean <strong>text input area</strong>, <strong>line numbers</strong>, and a <strong>scrollbar</strong> on the right side for easy navigation.</p>
+<blockquote>
+<p><strong>Note:</strong> A <strong>minimap scroll</strong> is currently under development and not yet fully functional. You can try enabling it by editing the source code <a href="https://github.com/ZtaMDev/PowerEdit">here in the GitHub repository</a>, and feel free to contribute to the project to help improve the experience for all users.</p>
+</blockquote>
+<p><img alt="Update Prompt" src="../assets/images/editor.png" /></p>
+<h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
+<h3 id="file-display">File Display<a class="headerlink" href="#file-display" title="Permanent link">&para;</a></h3>
+<p>The editor displays the contents of any file opened from the<br />
+- <a href="../file-explorer/">File Explorer</a>, or<br />
+- <a href="../top-menu/#file-menu.md">File Menu</a>.</p>
+<h3 id="tab-system">Tab System<a class="headerlink" href="#tab-system" title="Permanent link">&para;</a></h3>
+<p>PowerEdit uses a <strong>tabbed interface</strong> that allows you to open multiple files simultaneously—just like any modern code editor.</p>
+<ul>
+<li>All open tabs and editor state are preserved when exiting the application.</li>
+<li>The <strong>last active tab</strong> is also saved and automatically reopened the next time you launch PowerEdit.</li>
+</ul>
+<blockquote>
+<p>⚠️ <strong>Warning:</strong> If you close the editor without saving, any unsaved changes to the code <strong>will be lost</strong>. Be sure to save your work!</p>
+</blockquote>
+<h3 id="layout-system">Layout System<a class="headerlink" href="#layout-system" title="Permanent link">&para;</a></h3>
+<p>The editor supports a <strong>layout system</strong>, which allows you to rearrange certain widgets like the file explorer and (in future updates) additional panels.</p>
+<p>This layout flexibility pairs perfectly with the <strong>Live Preview</strong> feature, making it ideal for editing HTML, CSS, JS, or any other kind of web-based content.</p>
+<p>→ <a href="../live-preview/">Learn more about Live Preview</a></p>
 
 
 
