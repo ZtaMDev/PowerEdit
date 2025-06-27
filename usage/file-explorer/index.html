@@ -73,6 +73,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#file-explorer" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -450,6 +455,21 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    File Explorer
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -462,6 +482,52 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#core-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Core Features
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Project Management
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#theming-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Theming Support
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -741,6 +807,43 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#core-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Core Features
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Project Management
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#theming-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Theming Support
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -756,9 +859,41 @@
 
 
 
-  <h1>File Explorer</h1>
+<h1 id="file-explorer">File Explorer<a class="headerlink" href="#file-explorer" title="Permanent link">&para;</a></h1>
+<p>The <strong>File Explorer</strong> provides a structured view of the current project directory. It allows users to interact with files and folders in a simple and integrated way, making it easier to manage the contents of a project.</p>
+<h2 id="core-features">Core Features<a class="headerlink" href="#core-features" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p><strong>Display Project Structure</strong><br />
+  Shows all files and folders within the selected project root.</p>
+</li>
+<li>
+<p><strong>Create, Delete, and Rename</strong><br />
+  You can create new files or folders, delete existing ones, and rename them directly from the explorer.</p>
+</li>
+</ul>
+<blockquote>
+<p><strong>Note:</strong> More features are coming soon, including copy/paste, file properties, and more advanced file operations.</p>
+</blockquote>
+<h2 id="project-management">Project Management<a class="headerlink" href="#project-management" title="Permanent link">&para;</a></h2>
+<p>The File Explorer plays a key role in managing your project:
+- It serves as the entry point for all project resources.
+- It ensures that the editor loads and interacts with the correct files.
+- It supports workflows like file opening, saving, and navigation.</p>
+<h2 id="theming-support">Theming Support<a class="headerlink" href="#theming-support" title="Permanent link">&para;</a></h2>
+<p>The explorer also adapts visually to the <strong>active theme</strong> selected in PowerEdit. This includes:
+- Coloring of files and folders to match the theme’s palette.
+- Highlighted selection styles that reflect the current color scheme.
+- Seamless integration with light and dark modes, as defined in the <code>.theme</code> file.</p>
+<p align="center">
+  <img src="../assets/images/ftheme1.png" width="30%" style="display:inline-block; margin-right:10px;">
+  <img src="../assets/images/ftheme2.png" width="30%" style="display:inline-block; margin-right:10px;">
+  <img src="../assets/images/ftheme3.png" width="30%" style="display:inline-block;">
+</p>
 
-
+<p>This makes the explorer not only functional but also aesthetically consistent with the rest of the editor interface.</p>
+<p>It is tightly integrated with other components such as the <a href="../editor/">Editor</a> and <a href="../live-preview/">Live Preview</a>, ensuring everything stays in sync while you work.</p>
+<hr />
 
 
 

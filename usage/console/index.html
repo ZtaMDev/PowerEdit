@@ -73,6 +73,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#console" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -473,6 +478,21 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Console
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -485,6 +505,43 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Features
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -741,6 +798,34 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Features
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -756,9 +841,44 @@
 
 
 
-  <h1>Console</h1>
-
-
+<h1 id="console">Console<a class="headerlink" href="#console" title="Permanent link">&para;</a></h1>
+<p>The <strong>Console</strong> is a fundamental component in PowerEdit, essential for developers working with command-line tools and frameworks such as Flask, Django, or Node.js.</p>
+<p><img src="../assets/images/ctheme1.png" width="50%"></p>
+<h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p><strong>Command Execution</strong><br />
+  You can run shell commands directly through the input field located at the bottom of the editor interface.</p>
+</li>
+<li>
+<p><strong>Stop Active Processes</strong><br />
+  To stop a running command (such as a server), simply press <code>Ctrl+C</code> inside the console input.</p>
+</li>
+<li>
+<p><strong>Open Live Preview Links</strong><br />
+  When working with frameworks that launch a local server (like Flask), the console automatically detects and makes links clickable.<br />
+  → Try it out with <a href="../live-preview/">Live Preview</a></p>
+</li>
+<li>
+<p><strong>Theme Integration</strong><br />
+  The console automatically adapts to the current color theme for a seamless visual experience.</p>
+</li>
+</ul>
+<h2 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>⚠️ <strong>In Development:</strong><br />
+  Full support for standard shell commands is still under development. The goal is to make the console behave like a native Windows or Unix terminal.</p>
+</li>
+<li>
+<p>🧱 <strong>Modular Layout Coming Soon:</strong><br />
+  In future versions, both the Console and the File Explorer will become modular components, allowing you to dock and position them anywhere in the editor layout.</p>
+</li>
+</ul>
+<blockquote>
+<p>💡 If you're interested in customizing the Console behavior or layout, you can edit the source code of PowerEdit.<br />
+→ Download it from the <a href="https://github.com/ZtaMDev/PowerEdit">GitHub repository</a> or directly through the app via <strong>Help → Download Source Code</strong>.</p>
+</blockquote>
 
 
 
