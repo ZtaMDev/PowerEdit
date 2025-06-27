@@ -55,11 +55,19 @@ nav:
   - Instalación:
       - Getting Started: installation/getting_started.md
       - Update Manager: installation/update_manager.md
-  - Manual de Uso:
+  - User Manual:
       - Getting Started: usage/getting_started.md
-  - Edición de .theme:
+      - Top Menu: usage/top-menu.md
+      - Editor: usage/editor.md
+      - Autocompletion: usage/autocompletion.md
+      - File Explorer: usage/file-explorer.md
+      - Console: usage/console.md
+      - Live Preview: usage/live-preview.md
+      - Download Source: usage/download-source.md
+
+  - .theme Edition:
       - Getting Started: theme/getting_started.md
-  - Edición de .extend:
+  - .extend Edition:
       - Getting Started: extend/getting_started.md
   - Release Notes: release_notes.md
   - Changelog: changelog.md
