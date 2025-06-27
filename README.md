@@ -11,8 +11,16 @@ I’m thrilled to share **PowerEdit**, my very first open-source code editor pro
 ## Documentation
 - Power Edit now have [**Documentation**](https://ztamdev.github.io/PowerEdit/)
 ---
-![Captura de pantalla 2025-06-27 084826](https://github.com/user-attachments/assets/051b4807-9d6a-463c-a3f3-3352e44f6223)
-![Captura de pantalla 2025-06-27 084852](https://github.com/user-attachments/assets/40d52097-3ff2-4545-9b3c-350f23f7af97)
+<table>
+  <tr>
+    <td>
+      <img src="https://github.com/user-attachments/assets/051b4807-9d6a-463c-a3f3-3352e44f6223" alt="Captura 1" width="400"/>
+    </td>
+    <td>
+      <img src="https://github.com/user-attachments/assets/40d52097-3ff2-4545-9b3c-350f23f7af97" alt="Captura 2" width="400"/>
+    </td>
+  </tr>
+</table>
 
 ## 📥 How to download PowerEdit
 
