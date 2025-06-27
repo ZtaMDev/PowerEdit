@@ -1,5 +1,8 @@
 # PowerEdit <img src="https://github.com/user-attachments/assets/cab68082-bd3e-494e-9781-734a50397a1e" alt="Pe" width="30"/> 
 
+## Documentation
+- Power Edit now have [**Documentation**](https://ztamdev.github.io/PowerEdit/)
+---
 
 I’m thrilled to share **PowerEdit**, my very first open-source code editor project. After a month of intense development, it’s matured into something I’m proud of. Here on GitHub, you can:
 
@@ -7,9 +10,8 @@ I’m thrilled to share **PowerEdit**, my very first open-source code editor pro
 - **Contribute** improvements and new features  
 - **Report** any bugs or quirks you encounter  
 
----
-## Documentation
-- Power Edit now have [**Documentation**](https://ztamdev.github.io/PowerEdit/)
+
+
 ---
 <table>
   <tr>
