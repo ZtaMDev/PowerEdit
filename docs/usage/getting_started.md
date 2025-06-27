@@ -19,3 +19,4 @@ Below is a list of the main features of PowerEdit, each with its own dedicated d
 - [Download Source Code](download-source.md) – Allows you to download the Power Edit project files.
 
 
+---

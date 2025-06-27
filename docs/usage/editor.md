@@ -12,7 +12,7 @@ The **Editor** is the core component of PowerEdit, designed with the essential f
 ### File Display
 The editor displays the contents of any file opened from the  
 - [File Explorer](file-explorer.md), or  
-- [File Menu](top-menu.md#file-menu.md).
+- [File Menu](top-menu.md#file-menu).
 
 ### Tab System
 PowerEdit uses a **tabbed interface** that allows you to open multiple files simultaneously—just like any modern code editor.
@@ -28,3 +28,5 @@ The editor supports a **layout system**, which allows you to rearrange certain w
 This layout flexibility pairs perfectly with the **Live Preview** feature, making it ideal for editing HTML, CSS, JS, or any other kind of web-based content.
 
 → [Learn more about Live Preview](live-preview.md)
+
+---

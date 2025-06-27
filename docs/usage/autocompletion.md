@@ -35,3 +35,5 @@ All suggestions come from:
 - The `.extend` file associated with that language
 
 → [Learn more about `.extend` files and how to define autocomplete values](../extend/getting_started.md)
+
+---

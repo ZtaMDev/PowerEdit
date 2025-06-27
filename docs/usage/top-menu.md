@@ -147,3 +147,5 @@ The **Help** menu provides quick access to useful information and integrated too
   Offers a fast and intuitive way to download the current project or source files directly from within the editor.
 
 → [Learn more about how source code download works](download-source.md)
+
+---
