@@ -35,7 +35,7 @@ theme:
     - navigation.instant
     - navigation.top
     - content.code.annotate
-    - hide-footer          # ← Oculta “Made with Material for MkDocs”
+    - hide-footer
 
   footer:
     navigation: false
