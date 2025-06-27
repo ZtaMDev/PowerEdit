@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
-GITHUB_ZIP_URL = "https://github.com/ZondaxDeveloper/MiCodeEditorPowerEditor/archive/refs/heads/CrystalMain.zip"
+GITHUB_ZIP_URL = "https://github.com/ZtaMDev/PowerEdit/archive/refs/heads/main.zip"
 
 def get_documents_folder():
     return os.path.join(os.path.expanduser("~"), "Documents")
@@ -23,22 +23,19 @@ class DownloaderThread(QThread):
 
     def run(self):
         try:
-            self.log.emit("Descargando código fuente...")
+            self.log.emit("Downloading source code...")
             response = requests.get(GITHUB_ZIP_URL, stream=True)
 
             if response.status_code != 200:
-                self.log.emit(f"❌ Error al descargar: código {response.status_code}")
-                self.finished.emit("")
-                return
-
-            total = int(response.headers.get('content-length', 0))
-            if total == 0:
-                self.log.emit("❌ El servidor no especificó el tamaño del archivo. Puede que el enlace esté protegido o no sea válido.")
+                self.log.emit(f"❌ Error downloading code: {response.status_code}")
                 self.finished.emit("")
                 return
 
             os.makedirs(self.extract_path, exist_ok=True)
             zip_path = os.path.join(self.extract_path, "poweredit_download.zip")
+
+            total = response.headers.get('content-length')
+            total = int(total) if total else None
 
             with open(zip_path, 'wb') as f:
                 downloaded = 0
@@ -46,10 +43,13 @@ class DownloaderThread(QThread):
                     if chunk:
                         f.write(chunk)
                         downloaded += len(chunk)
-                        percent = int((downloaded / total) * 100)
-                        self.progress.emit(percent)
+                        if total:
+                            percent = int((downloaded / total) * 100)
+                            self.progress.emit(percent)
+                        else:
+                            self.progress.emit(0)
 
-            self.log.emit("Extrayendo archivo...")
+            self.log.emit("Extracting file...")
 
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                 zip_ref.extractall(self.extract_path)
@@ -60,6 +60,7 @@ class DownloaderThread(QThread):
         except Exception as e:
             self.log.emit(f"❌ Error: {str(e)}")
             self.finished.emit("")
+
 
 class DownloadDialog(QDialog):
     def __init__(self, parent=None):

@@ -6,168 +6,206 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QVBoxLayout, QProgressBar,
     QPushButton, QTextEdit, QMessageBox
 )
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtCore import QThread, pyqtSignal
 
-GITHUB_REPO = "ZondaxDeveloper/MiCodeEditorPowerEditor"
-CURRENT_VERSION = "1.0.0"
-# Ejecutable principal (editor)
+GITHUB_REPO    = "ZtaMDev/PowerEdit"
+CURRENT_VERSION= "1.0.0"
 APP_EXECUTABLE = os.path.join(os.path.dirname(sys.argv[0]), "app.exe")
-# Nombre del instalador descargable desde Releases
-UPDATE_FILENAME = "PowerEdit-Setup.exe"
+def get_base_dir():
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(__file__)
+def get_download_dir():
+    # Usa la carpeta temporal del usuario
+    return os.getenv('TEMP') or os.path.expanduser("~\\AppData\\Local\\Temp")
 
+
+UPDATE_BASENAME = "PowerEdit-Setup"
+# Hilo para buscar actualizaciones (ya lo tenías)
 class UpdaterThread(QThread):
-    progress = pyqtSignal(int)
-    log = pyqtSignal(str)
-    new_version = pyqtSignal(str)
-    finished = pyqtSignal(bool)
+    log         = pyqtSignal(str)
+    new_version= pyqtSignal(str)
+    finished   = pyqtSignal(bool)
 
     def __init__(self):
         super().__init__()
-        self.download_url = None
+        self.download_url   = None
+        self.latest_version = ""
 
     def run(self):
         try:
-            self.log.emit("🔍 Buscando actualizaciones...")
+            self.log.emit("Checking for updates...")
             url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
-            response = requests.get(url)
-            if response.status_code != 200:
-                self.log.emit("⚠️ No se pudo acceder a GitHub.")
+            r = requests.get(url, timeout=2)
+            if r.status_code != 200:
+                self.log.emit("⚠️ Cannot reach GitHub.")
                 self.finished.emit(False)
                 return
 
-            data = response.json()
-            latest_version = data.get("tag_name", "")
+            data = r.json()
+            ver = data.get("tag_name", "")
             assets = data.get("assets", [])
 
-            if not latest_version or latest_version <= CURRENT_VERSION:
-                # Sin actualizaciones
+            if not ver or ver <= CURRENT_VERSION:
                 self.finished.emit(True)
                 return
 
-            # Hay versión nueva
-            self.log.emit(f"🚀 Nueva versión disponible: {latest_version}")
-            self.new_version.emit(latest_version)
+            self.latest_version = ver
+            self.log.emit(f"📦 New version available: {ver}")
+            self.new_version.emit(ver)
 
-            # Buscar URL del instalador
-            for asset in assets:
-                if asset.get("name") == UPDATE_FILENAME:
-                    self.download_url = asset.get("browser_download_url")
+            for a in assets:
+                if a.get("name", "").startswith(UPDATE_BASENAME):
+                    self.download_url = a.get("browser_download_url")
                     break
 
             if not self.download_url:
-                self.log.emit("❌ No se encontró el instalador en la release.")
+                self.log.emit("❌ Installer asset not found.")
                 self.finished.emit(False)
-                return
-
-            # Usuario debe confirmar antes de descargar
-            # La descarga se realizará tras confirmación en la UI
 
         except Exception as e:
-            self.log.emit(f"❌ Error al buscar actualizaciones: {e}")
+            self.log.emit(f"❌ Error checking updates: {e}")
             self.finished.emit(False)
+
+
+# Hilo para descargar el instalador sin bloquear la UI
+class InstallerThread(QThread):
+    progress = pyqtSignal(int)
+    log      = pyqtSignal(str)
+    finished = pyqtSignal(str)  # emite ruta absoluta del installer o "" en error
+
+    def __init__(self, url, version):
+        super().__init__()
+        self.url     = url
+        self.version = version
+
+    def run(self):
+        base = get_download_dir()               # ya no usamos Program Files
+        fname = f"{UPDATE_BASENAME}-v{self.version}.exe"
+        path  = os.path.join(base, fname)
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+
+            self.log.emit(f"⬇️ Downloading to {base}: {fname}…")
+            r = requests.get(self.url, stream=True, timeout=30)
+            total = int(r.headers.get("content-length", 0))
+            if total <= 0:
+                raise Exception("Invalid content length")
+
+            with open(path, "wb") as f:
+                dl = 0
+                for chunk in r.iter_content(8192):
+                    if not chunk: continue
+                    f.write(chunk)
+                    dl += len(chunk)
+                    pct = int(dl * 100 / total)
+                    self.progress.emit(pct)
+
+            self.log.emit("✅ Download complete.")
+            self.finished.emit(path)
+
+        except Exception as e:
+            self.log.emit(f"❌ Download error: {e}")
+            self.finished.emit("")
+
 
 class UpdateManager(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("PowerEdit Updater")
         self.setFixedSize(460, 320)
-        self.setup_ui()
+        self._setup_ui()
         self.hide()
 
-        # Iniciar hilo de búsqueda
-        self.thread = UpdaterThread()
-        self.thread.log.connect(self.log_box.append)
-        self.thread.new_version.connect(self.on_new_version)
-        self.thread.finished.connect(self.on_search_finished)
-        self.thread.start()
+        self.updater = UpdaterThread()
+        self.updater.log.connect(self.log_box.append)
+        self.updater.new_version.connect(self._on_new_version)
+        self.updater.finished.connect(self._on_search_finished)
+        self.updater.start()
 
-    def setup_ui(self):
+    def _setup_ui(self):
         self.setStyleSheet("""
-            QWidget { background-color: #1e1e1e; color: white; font-family: Consolas; }
-            QTextEdit { background-color: #2b2b2b; border: 1px solid #444; color: #ccc; }
-            QPushButton { background-color: #0078d7; color: white; padding: 6px; border-radius: 4px; }
-            QPushButton:hover { background-color: #1890ff; }
-            QProgressBar { border: 1px solid #444; background-color: #2a2a2a; border-radius: 4px; text-align: center; }
-            QProgressBar::chunk { background-color: #00bcf2; }
+            QWidget { background: #1e1e1e; color: #fff; font: 12px Consolas; }
+            QTextEdit { background: #2b2b2b; border: 1px solid #444; color: #ccc; }
+            QPushButton { background: #0078d7; color: #fff; padding: 6px; border-radius:4px; }
+            QPushButton:hover { background: #1890ff; }
+            QProgressBar { border:1px solid #444; background:#2a2a2a; border-radius:4px; text-align:center; }
+            QProgressBar::chunk { background:#00bcf2; }
         """)
-
         layout = QVBoxLayout(self)
-        self.label = QLabel("Verificando actualizaciones...")
-        self.progress = QProgressBar()
-        self.log_box = QTextEdit()
-        self.log_box.setReadOnly(True)
-        self.button_update = QPushButton("Descargar e instalar")
-        self.button_update.clicked.connect(self.start_download)
-        self.button_update.setVisible(False)
-        self.button_launch = QPushButton("Iniciar PowerEdit")
-        self.button_launch.clicked.connect(self.launch_app)
-        self.button_launch.setEnabled(False)
 
-        layout.addWidget(self.label)
-        layout.addWidget(self.progress)
-        layout.addWidget(self.log_box)
-        layout.addWidget(self.button_update)
-        layout.addWidget(self.button_launch)
+        self.label       = QLabel("Verifying updates...")
+        self.progress    = QProgressBar()
+        self.progress.setRange(0, 0)  # indeterminate while checking
+        self.log_box     = QTextEdit(); self.log_box.setReadOnly(True)
+        self.btn_download= QPushButton("Download & Install")
+        self.btn_download.clicked.connect(self._start_download)
+        self.btn_download.setVisible(False)
+        self.btn_launch  = QPushButton("Start PowerEdit")
+        self.btn_launch.clicked.connect(self._launch_app)
+        self.btn_launch.setEnabled(False)
 
-    def on_new_version(self, version):
-        # Mostrar diálogo de confirmación
-        reply = QMessageBox.question(
-            self, "Actualización Disponible",
-            f"Hay una nueva versión ({version}).\n¿Deseas descargar e instalar?",
+        for w in (self.label, self.progress, self.log_box,
+                  self.btn_download, self.btn_launch):
+            layout.addWidget(w)
+
+    def _on_new_version(self, ver):
+        resp = QMessageBox.question(
+            self, "Update Available",
+            f"A new version ({ver}) is available.\nDo you want to update now?",
             QMessageBox.Yes | QMessageBox.No
         )
-        if reply == QMessageBox.Yes:
-            # Mostrar UI y botón de descarga
+        if resp == QMessageBox.Yes:
             self.show()
-            self.button_update.setVisible(True)
-            self.label.setText(f"Preparado para descargar v{version}")
+            self.progress.setRange(0, 100)
+            self.btn_download.setVisible(True)
+            self.label.setText(f"Ready to download v{ver}")
         else:
-            # Saltar actualización y lanzar app
-            self.launch_app()
+            self._launch_app()
 
-    def on_search_finished(self, ok):
-        if ok and not self.thread.download_url:
-            # Sin actualización: lanzar app silent
-            self.launch_app()
+    def _on_search_finished(self, ok):
+        # restore determinate or launch silently
+        self.progress.setRange(0, 100)
+        if ok and not self.updater.download_url:
+            self.label.setText("✅ PowerEdit is up to date.")
+            self._launch_app()
         elif not ok and not self.isVisible():
-            # Error y UI no visible
             self.show()
-            self.label.setText("Error al buscar actualizaciones.")
-            self.button_launch.setEnabled(True)
+            self.label.setText("❌ Error checking updates.")
+            self.btn_launch.setEnabled(True)
 
-    def start_download(self):
-        # Desactivar botón para evitar reintentos
-        self.button_update.setEnabled(False)
-        self.log_box.append("⬇️ Iniciando descarga...")
-        try:
-            r = requests.get(self.thread.download_url, stream=True)
-            total = int(r.headers.get("content-length", 0))
-            if total <= 0:
-                raise Exception("Tamaño inválido")
-            with open(UPDATE_FILENAME, 'wb') as f:
-                downloaded = 0
-                for chunk in r.iter_content(8192):
-                    if chunk:
-                        f.write(chunk)
-                        downloaded += len(chunk)
-                        percent = int(downloaded*100/total)
-                        self.progress.setValue(percent)
-            self.log_box.append("✅ Descarga completa.")
-            # Ejecutar instalador y luego cerrar updater
-            subprocess.Popen([UPDATE_FILENAME], shell=True)
-        except Exception as e:
-            self.log_box.append(f"❌ Error al descargar: {e}")
-            self.button_update.setEnabled(True)
-        finally:
-            self.button_launch.setEnabled(True)
-            self.label.setText("Instalador descargado.")
+    def _start_download(self):
+        self.btn_download.setEnabled(False)
+        ver = self.updater.latest_version
+        self.installer = InstallerThread(self.updater.download_url, ver)
+        self.installer.log.connect(self.log_box.append)
+        self.installer.progress.connect(self.progress.setValue)
+        self.installer.finished.connect(self._on_download_finished)
+        self.installer.start()
 
-    def launch_app(self):
+    def _on_download_finished(self, installer_path):
+        if installer_path:
+            try:
+                subprocess.Popen([installer_path], shell=True)
+            except Exception as e:
+                self.log_box.append(f"❌ Could not launch installer: {e}")
+            finally:
+                self.close()
+        else:
+            self.log_box.append("❌ Failed to download installer.")
+            self.btn_download.setEnabled(True)
+            self.btn_launch.setEnabled(True)
+            self.label.setText("Installer download failed.")
+
+
+    def _launch_app(self):
         try:
             subprocess.Popen([APP_EXECUTABLE], shell=True)
         except Exception as e:
-            self.log_box.append(f"❌ No se pudo iniciar PowerEdit: {e}")
+            self.log_box.append(f"❌ Cannot start PowerEdit: {e}")
         QApplication.quit()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
