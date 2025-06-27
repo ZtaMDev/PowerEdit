@@ -16,6 +16,6 @@ Below is a list of the main features of PowerEdit, each with its own dedicated d
 - [File Explorer](file-explorer.md) – Built-in file navigator to manage and open project files.
 - [Console](console.md) – Integrated terminal to run Python scripts and commands directly.
 - [Live Preview](live-preview.md) – Real-time preview system for HTML and Markdown files.
-- [Download Source Code](download-source.md) – Allows you to export your project files.
+- [Download Source Code](download-source.md) – Allows you to download the Power Edit project files.
 
-Use these pages to explore each feature in detail.
+

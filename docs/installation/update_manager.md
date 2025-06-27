@@ -42,7 +42,7 @@ PowerEdit includes a built-in update manager that automatically checks for the l
 - **Installing the update**  
    The installer is similar to previous versions but contains the latest features and changes.
 	   ![Update Prompt](assets/images/installing.png)
-   > If you’re not familiar with the installation process, refer to the [Getting Started](../getting_started/) section for a complete guide.
+   > If you’re not familiar with the installation process, refer to the [Getting Started](../installation//getting_started.md) section for a complete guide.
 
 
 
