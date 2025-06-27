@@ -1,0 +1,151 @@
+/* ─── 1. Fondo general ───────────────────────────────────────────────────── */
+html, body, .md-main, .md-content, .md-content__inner {
+  background: #121212 !important;
+  color: #e0e0e0 !important;
+  margin: 0; padding: 0;
+}
+
+/* ─── 2. Cabecera (Header) ───────────────────────────────────────────────── */
+.md-header, 
+.md-header__inner {
+  background: #1e1e1e !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+/* Ajusta el logo y título juntos */
+.md-header__panel {
+  display: flex;
+  align-items: center;
+}
+.md-header__panel .md-logo {
+  max-height: 2.5rem !important;
+  filter: none !important;
+}
+.md-header__panel .md-header-nav__title {
+  color: #e0e0e0 !important;
+  font-weight: 600 !important;
+  margin-left: 0.5rem !important;
+}
+
+/* ─── 3. Sidebar (Menú izquierdo) ───────────────────────────────────────── */
+.md-sidebar--primary {
+  background: #1e1e1e !important;
+  border-right: 1px solid #333 !important;
+  box-shadow: none !important;
+  padding-top: 0 !important;
+}
+
+/* Elimina esa “barra” superior del sidebar */
+.md-sidebar--primary .md-sidebar__scrollwrap {
+  padding-top: 0 !important;
+}
+
+/* Enlaces del menú */
+.md-sidebar--primary .md-nav__link {
+  color: #cfcfcf !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 4px !important;
+  margin: 0.25rem 0 !important;
+  transition: background 0.2s ease !important;
+}
+.md-sidebar--primary .md-nav__link:hover {
+  background: #333333 !important;
+  color: #ffffff !important;
+}
+.md-sidebar--primary .md-nav__link--active {
+  background: #3f51b5 !important;
+  color: #fff !important;
+}
+
+/* ─── 4. Área de contenido ───────────────────────────────────────────────── */
+.md-main__inner {
+  margin: 1rem !important;
+  padding: 2rem !important;
+  background: #1e1e1e !important;
+  box-shadow: none !important;
+  border-radius: 6px !important;
+}
+
+/* ─── 5. Títulos dentro de la doc ─────────────────────────────────────────── */
+.md-typeset h1,
+.md-typeset h2 {
+  border-left: 4px solid #3f51b5 !important;
+  padding-left: 0.5rem !important;
+  margin-top: 1.5rem !important;
+  color: #e0e0e0 !important;
+}
+
+/* ─── 6. Admonitions ───────────────────────────────────────────────────────── */
+.admonition {
+  background: #2a2a2a !important;
+  border-left: 4px solid #3f51b5 !important;
+  padding: 1rem !important;
+  border-radius: 4px !important;
+  color: #ccc !important;
+}
+
+/* ─── 7. Bloques de código ────────────────────────────────────────────────── */
+.md-typeset pre,
+.highlight pre {
+  background: #222 !important;
+  color: #e0e0e0 !important;
+  border: 1px solid #333 !important;
+  border-radius: 4px !important;
+  padding: 1rem !important;
+  overflow-x: auto !important;
+}
+.md-typeset code {
+  background: #333 !important;
+  color: #e0e0e0 !important;
+  padding: 0.2rem 0.4rem !important;
+  border-radius: 3px !important;
+}
+/* ─── GRID DE 2 COLUMNAS ───────────────────────────────────────────────── */
+.two-column {
+  display: grid;
+  grid-template-columns: 1fr 240px; /* 1fr para contenido, 240px para Quick Links */
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Asegura que el bloque Quick Links use el estilo anterior */
+.sidebar-column.quick-links {
+  position: static !important;
+  width: auto !important;
+  background: #1e1e1e !important;
+  border: 1px solid #333 !important;
+  border-radius: 8px !important;
+  padding: 1.5rem !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+  color: #eee !important;
+}
+
+/* Oculta el Quick Links en pantallas pequeñas */
+@media (max-width: 1024px) {
+  .two-column {
+    display: block;
+  }
+  .sidebar-column.quick-links {
+    margin-top: 2rem;
+  }
+}
+/* Oculta el branding “Made with Material for MkDocs” */
+/* Ocultar todo el pie de página por defecto */
+/* Ocultar sólo el texto “Made with Material for MkDocs” sin afectar el layout */
+.md-footer__powered-by {
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Si existe algún contenedor legacy, aplicar lo mismo */
+.md-legacy-footer__powered-by {
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}

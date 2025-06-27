@@ -1,0 +1,61 @@
+site_name: PowerEdit Documentation
+site_url: https://ZtaMDev.github.io/PowerEdit/
+
+docs_dir: docs
+
+extra_css:
+  - css/custom.css
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  palette:
+    scheme: slate
+    primary: indigo
+    accent: indigo
+  font:
+    text: Roboto
+    code: Roboto Mono
+  logo: images/logo.png
+  favicon: images/favicon.ico
+
+  repo_url: https://github.com/ZtaMDev/PowerEdit
+  repo_name: GitHub
+
+  features:
+    - navigation.instant
+    - navigation.top
+    - content.code.annotate
+    - hide-footer          # ← Oculta “Made with Material for MkDocs”
+
+  footer:
+    navigation: false
+    text: "© 2025 PowerEdit by ZtaMDev. Licensed under [MIT](LICENSE)."
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/ZtaMDev/PowerEdit/releases
+      name: "Releases"
+    - icon: material/license
+      link: https://github.com/ZtaMDev/PowerEdit/blob/main/LICENSE
+      name: "License"
+
+nav:
+  - Home: index.md
+  - Instalación:
+      - Getting Started: installation/getting_started.md
+  - Manual de Uso:
+      - Getting Started: usage/getting_started.md
+  - Edición de .theme:
+      - Getting Started: theme/getting_started.md
+  - Edición de .extend:
+      - Getting Started: extend/getting_started.md
+  - Release Notes: release_notes.md
+  - Changelog: changelog.md
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.superfences
