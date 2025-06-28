@@ -12,8 +12,10 @@ QMenuBar::item, QMenu::item {
 QMenuBar::item:selected, QMenu::item:selected {
     background-color: #504945;
 }
+/* Tabs */
 QTabWidget::pane {
-    border: 1px solid #444;
+    border: 1px solid #504945;
+    top: -1px;
     background: #282828;
 }
 QTabBar::tab {
@@ -21,17 +23,24 @@ QTabBar::tab {
     color: #ebdbb2;
     padding: 6px 12px;
     border: 1px solid #504945;
+    border-bottom: none;
+    font-family: Consolas, monospace;
+    min-width: 60px;
+    max-width: 320px;
 }
 QTabBar::tab:selected {
-    background: #928374;
-    color: #282828;
+    background: #504945;
+    border-top: 1.5px solid #fabd2f;
+    color: #ebdbb2;
 }
 QTabBar::tab:hover {
-    background: #665c54;
+    background: #504945;
 }
 QTabBar::close-button {
-    background: #cc241d;
+    background: transparent;
+    subcontrol-position: right;
     border-radius: 4px;
+    image: url(icons/close-dark.svg);
     padding: 4px;
 }
 QTabBar::close-button:hover {
@@ -73,21 +82,22 @@ QTreeView::item:selected {
     background-color: #b16286;
     color: #282828;
 }
+/* Scrollbars */
 QScrollBar:vertical, QScrollBar:horizontal {
-    background: rgba(60, 56, 54, 0.5); /* semitransparent Gruvbox dark */
-    border-radius: 4px;
+    background: rgba(60, 56, 54, 0.18); /* fondo Gruvbox muy sutil */
+    border-radius: 5px;
     width: 10px;
     height: 10px;
     margin: 0px;
 }
 QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
-    background: #928374;
-    border-radius: 4px;
+    background: rgba(146, 131, 116, 0.45); /* marrón claro semitransparente */
+    border-radius: 5px;
     min-height: 20px;
     min-width: 20px;
 }
 QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
-    background: #bdae93;
+    background: rgba(250, 189, 47, 0.7); /* amarillo Gruvbox semitransparente */
 }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
 QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
@@ -148,20 +158,20 @@ QTreeView::item:selected {
 }
 
 QScrollBar:vertical, QScrollBar:horizontal {
-    background: rgba(60, 56, 54, 0.5);       /* semitransparent Gruvbox dark */
-    border-radius: 4px;
+    background: rgba(60, 56, 54, 0.3);       /* semitransparent Gruvbox dark */
+    border-radius: 5px;
     width: 10px;
     height: 10px;
     margin: 0px;
 }
 QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
-    background: #928374;       /* Mango scrollbar marrón claro */
-    border-radius: 4px;
+    background: rgba(146, 131, 116, 0.55);       /* marrón claro semitransparente */
+    border-radius: 5px;
     min-height: 20px;
     min-width: 20px;
 }
 QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
-    background: #bdae93;       /* Hover mango scrollbar beige */
+    background: rgba(189, 174, 147, 0.7);       /* beige semitransparente */
 }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
 QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {

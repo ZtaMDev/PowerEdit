@@ -35,6 +35,17 @@ from utils.custom_dock_widget import CustomDockWidget
 from utils.download_dialog import DownloadDialog
 class MainWindow(QMainWindow):
     def __init__(self):
+        # Crear settings.json por defecto si no existe
+        settings_path = "settings.json"
+        if not os.path.exists(settings_path):
+            default_settings = {
+                "theme": "Default-Ideal",
+                "project_root": None,
+                "open_tabs": [],
+                "active_tab": 0
+            }
+            with open(settings_path, "w", encoding="utf-8") as f:
+                json.dump(default_settings, f, indent=4)
         super().__init__()
         self.setWindowIcon(QIcon("poweredit.ico"))
         self.setWindowTitle("PowerEdit")
@@ -140,6 +151,39 @@ class MainWindow(QMainWindow):
         
         self.update_run_button_for_current_tab()  # inicial
         # Arrancamos el “servidor” (con el folder del proyecto o cwd)
+
+        # --- VersionPopup: mostrar solo si la versión de GitHub es diferente a la de version.json ---
+        # (Flag eliminado, ahora se maneja en showEvent)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not getattr(self, '_version_popup_shown', False):
+            self._version_popup_shown = True
+            from PyQt5.QtCore import QTimer
+            def show_version_popup():
+                try:
+                    from versionpopup import VersionPopup
+                    version_path = os.path.join(os.getcwd(), "version.json")
+                    repo = "ZtaMDev/PowerEdit"  # Cambia si tu repo es otro
+                    # Leer versión local
+                    local_version = None
+                    if os.path.exists(version_path):
+                        with open(version_path, "r", encoding="utf-8") as f:
+                            data = json.load(f)
+                            local_version = data.get("version")
+                    # Consultar versión de GitHub
+                    import requests
+                    api_url = f"https://api.github.com/repos/{repo}/releases/latest"
+                    resp = requests.get(api_url, timeout=10)
+                    if resp.status_code == 200:
+                        latest = resp.json()
+                        github_version = latest.get("tag_name")
+                        if github_version and github_version != local_version:
+                            popup = VersionPopup(repo, github_version, self, version_path=version_path)
+                            popup.exec_()
+                except Exception as e:
+                    print(f"[VersionPopup] Error: {e}")
+            QTimer.singleShot(350, show_version_popup)
 
     def update_run_button_for_current_tab(self):
         editor = self.tabs.current_editor()
@@ -1011,6 +1055,35 @@ class MainWindow(QMainWindow):
         dialog.setLayout(layout)
 
         dialog.exec_()
+
+    def closeEvent(self, event):
+        # Warn if there are unsaved changes in any tab (except Welcome)
+        unsaved = []
+        for i in range(self.tabs.count()):
+            editor = self.tabs.widget(i)
+            # Skip welcome tab
+            if hasattr(self.tabs, '_welcome_tab') and editor == self.tabs._welcome_tab:
+                continue
+            if hasattr(editor, 'toPlainText'):
+                current = editor.toPlainText()
+                saved = self.tabs.saved_texts.get(editor, "")
+                if current != saved:
+                    unsaved.append(self.tabs.tabText(i))
+        if unsaved:
+            msg = ("There are unsaved changes in the following tabs:\n\n" +
+                   "\n".join(unsaved) +
+                   "\n\nIf you close the application now, all unsaved changes will be lost.\n\nDo you want to exit anyway?")
+            reply = QMessageBox.warning(
+                self,
+                "Unsaved Changes",
+                msg,
+                QMessageBox.Yes | QMessageBox.Cancel,
+                QMessageBox.Cancel
+            )
+            if reply != QMessageBox.Yes:
+                event.ignore()
+                return
+        event.accept()
 
 from PyQt5.QtWidgets import QDockWidget, QWidget, QHBoxLayout, QLabel, QPushButton
 from PyQt5.QtCore import Qt

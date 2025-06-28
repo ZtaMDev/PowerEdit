@@ -21,17 +21,24 @@ QTabBar::tab {
     color: #f8f8f2;
     padding: 6px 12px;
     border: 1px solid #444;
+    border-bottom: none;
+    font-family: Consolas, monospace;
+    min-width: 60px;
+    max-width: 320px;
 }
 QTabBar::tab:selected {
-    background: #49483e;
+    background: #75715e;
+    border-top: 1.5px solid #a6e22e;
     color: #f8f8f2;
 }
 QTabBar::tab:hover {
-    background: #75715e;
+    background: #49483e;
 }
 QTabBar::close-button {
-    background: #f92672;
+    background: transparent;
+    subcontrol-position: right;
     border-radius: 4px;
+    image: url(icons/close-dark.svg);
     padding: 4px;
 }
 QTabBar::close-button:hover {
@@ -73,21 +80,22 @@ QTreeView::item:selected {
     background-color: #66d9ef;
     color: #272822;
 }
+/* Scrollbars */
 QScrollBar:vertical, QScrollBar:horizontal {
-    background: rgba(62, 61, 50, 0.5); /* semitransparent Monokai dark */
-    border-radius: 4px;
+    background: rgba(62, 61, 50, 0.18); /* fondo Monokai muy sutil */
+    border-radius: 5px;
     width: 10px;
     height: 10px;
     margin: 0px;
 }
 QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
-    background: #75715e;
-    border-radius: 4px;
+    background: rgba(117, 113, 94, 0.45); /* oliva Monokai semitransparente */
+    border-radius: 5px;
     min-height: 20px;
     min-width: 20px;
 }
 QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
-    background: #a59f85;
+    background: rgba(166, 226, 46, 0.7); /* verde lima Monokai semitransparente */
 }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
 QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
@@ -130,6 +138,7 @@ QListWidget::item:selected {
 QPlainTextEdit {
     background-color: #272822;
     color: #f8f8f2;
+    font-family: Consolas, monospace;
     selection-background-color: #49483e;
     border: none;
 }

@@ -65,7 +65,7 @@ class DownloaderThread(QThread):
 class DownloadDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Descargar código fuente")
+        self.setWindowTitle("Download Source Code")
         self.setMinimumSize(500, 400)
 
         
@@ -109,23 +109,23 @@ class DownloadDialog(QDialog):
         self.path_input = QLineEdit(get_documents_folder())
         ruta_layout.addWidget(self.path_input)
 
-        self.browse_button = QPushButton("Examinar...")
+        self.browse_button = QPushButton("Browse...")
         self.browse_button.clicked.connect(self.select_folder)
         ruta_layout.addWidget(self.browse_button)
         layout.addLayout(ruta_layout)
 
-        # Barra de progreso (sin estilos personalizados)
+        # Progress bar (without custom styles)
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(0)
         layout.addWidget(self.progress_bar)
 
-        # Consola de log
+        # Log console
         self.log_output = QTextEdit()
         self.log_output.setReadOnly(True)
         layout.addWidget(self.log_output)
 
-        # Botón de descarga
-        self.download_button = QPushButton("Descargar desde GitHub")
+        # Download button
+        self.download_button = QPushButton("Download from GitHub")
         self.download_button.clicked.connect(self.start_download)
         layout.addWidget(self.download_button)
 
@@ -133,7 +133,7 @@ class DownloadDialog(QDialog):
         self.log_output.append(message)
 
     def select_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Selecciona una carpeta", get_documents_folder())
+        folder = QFileDialog.getExistingDirectory(self, "Select Folder", get_documents_folder())
         if folder:
             self.path_input.setText(folder)
 
@@ -149,7 +149,7 @@ class DownloadDialog(QDialog):
 
     def download_finished(self, path):
         if path:
-            self.log(f"✅ Código fuente extraído en:\n{path}")
+            self.log(f"✅ Source code extracted to:\n{path}")
         else:
-            self.log("❌ Hubo un error.")
+            self.log("❌ An error occurred.")
         self.download_button.setEnabled(True)

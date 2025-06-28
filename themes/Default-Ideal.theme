@@ -4,36 +4,64 @@ QMainWindow {
 }
  
 /* Menu Bar */
-QMenuBar { 
+QMenuBar {
     background-color: #2c2c2c;
-    color: white;
-    font-family: Consolas, monospace;
+    color: #F8F8F2;
+    font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+    font-size: 14px;
+    padding: 0 6px;
+    min-height: 22px;
+    border: none;
 }
 QMenuBar::item {
-    background-color: #2c2c2c;
-    color: white;
-    padding: 4px 10px;
+    background: transparent;
+    color: #F8F8F2;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin: 0 1px;
 }
 QMenuBar::item:selected {
-    background-color: #444;
+    background: #44475A;
+    color: #F8F8F2;
+    border-radius: 2px;
+}
+QMenuBar::item:pressed {
+    background: #6272A4;
+    color: #F8F8F2;
 }
 
 /* Menus */
 QMenu {
     background-color: #2c2c2c;
-    color: white;
-    border: 1px solid #555;
-    font-family: Consolas, monospace;
+    color: #F8F8F2;
+    border: 0.5px solid #666;
+    font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+    font-size: 14px;
+    border-radius: 2px;
+    padding: 2px 0;
+}
+QMenu::item {
+    background: transparent;
+    color: #F8F8F2;
+    padding: 4px 16px;
+    border-radius: 2px;
+    margin: 1px 2px;
 }
 QMenu::item:selected {
-    background-color: #5555aa;
+    background-color: #44475A;
+    color: #F8F8F2;
+    border-radius: 2px;
+}
+QMenu::item:pressed {
+    background: #6272A4;
+    color: #F8F8F2;
 }
 
 /* Tabs */
 QTabWidget::pane {
     border: 1px solid #444;
     top: -1px;
-    background: #1e1e1e;
+    background: #282A36;
 }
 QTabBar::tab {
     background: #2c2c2c;
@@ -46,7 +74,8 @@ QTabBar::tab {
     max-width: 320px;
 }
 QTabBar::tab:selected {
-    background: #1e1e1e;
+    background: #44475A;
+    border-top: 1.5px solid #F8F8F2;
     color: #F8F8F2;
 }
 QTabBar::tab:hover {
@@ -56,6 +85,7 @@ QTabBar::close-button {
     background: #ff5555;
     subcontrol-position: right;
     border-radius: 4px;
+    image: url(icons/close-dark.svg);
     padding: 4px;
 }
 QTabBar::close-button:hover {
@@ -185,20 +215,20 @@ QPushButton:hover {
 }
 /* Scrollbars */
 QScrollBar:vertical, QScrollBar:horizontal {
-    background: rgba(40, 42, 54, 0.5); /* semitransparent dark */
+    background: rgba(40, 42, 54, 0.3); /* semitransparent dark */
     border-radius: 5px;
     width: 10px;
     height: 10px;
     margin: 0px;
 }
 QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
-    background: #44475A;
+    background: rgba(68, 71, 90, 0.55); /* violeta oscuro semitransparente */
     border-radius: 5px;
     min-height: 20px;
     min-width: 20px;
 }
 QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
-    background: #6272A4;
+    background: rgba(98, 114, 164, 0.7); /* azul acento semitransparente */
 }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
 QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
