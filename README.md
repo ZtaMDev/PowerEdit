@@ -60,6 +60,8 @@ We welcome contributions! Please read our [Contributing Guide](https://github.co
 
 ## 📋 Key Features
 
+> Note If you will to know the last updates and features go to the [**Releases**](https://github.com/ztamdev/PowerEdit/releases) page.
+
 - **Tabbed editor** with syntax highlighting  
 - **Custom themes** loaded from `.theme` files  
 - **Extension packs** via `.extend` files  
