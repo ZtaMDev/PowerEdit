@@ -65,8 +65,8 @@ We welcome contributions! Please read our [Contributing Guide](https://github.co
 - **Tabbed editor** with syntax highlighting  
 - **Custom themes** loaded from `.theme` files  
 - **Syntax highlighting extension packs** via `.extend` files
-- **Integrated live preview for web developers
-- **Minimap of the code for a short preview of the file
+- **Integrated live preview** for web developers
+- **Minimap** of the code for a short preview of the file
 - **Integrated console** powered by `pyte` for real-time output  
 - **Update Manager** fetches & installs new releases automatically  
 - **Source Downloader** pulls the latest code ZIP right from GitHub  
