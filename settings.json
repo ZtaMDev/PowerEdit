@@ -1,15 +1,6 @@
 {
     "theme": "Default-Ideal",
-    "project_root": "F:/PowerEdit",
-    "open_tabs": [
-        {
-            "path": "F:/PowerEdit/TestFiles/index.html",
-            "language": "html"
-        },
-        {
-            "path": "F:/PowerEdit/autocomplete_suggestions.py",
-            "language": "python"
-        }
-    ],
+    "project_root": null,
+    "open_tabs": [],
     "active_tab": 0
 }

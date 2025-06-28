@@ -32,6 +32,32 @@ def compute_indent_level(text):
             stack.append(tag)
     return len(stack)
 
+def detect_indent_string(doc, default="    "):
+    # Scan the first 50 lines for indentation and collect all indent units
+    indents = []
+    for i in range(min(50, doc.blockCount())):
+        line = doc.findBlockByNumber(i).text()
+        m = re.match(r"^( +|\t+)", line)
+        if m:
+            indents.append(m.group(1))
+    if not indents:
+        return default
+    # Find the smallest non-empty indent (most likely the base unit)
+    min_indent = min((s for s in indents if s.strip()), key=len, default=default)
+    # If all indents are tabs, use a tab
+    if all(s.startswith("\t") for s in indents):
+        return "\t"
+    # If all indents are spaces, use the most common width
+    space_indents = [s for s in indents if s.startswith(" ")]
+    if space_indents:
+        lengths = [len(s) for s in space_indents]
+        # Use the most common indent length
+        from collections import Counter
+        most_common = Counter(lengths).most_common(1)
+        if most_common:
+            return " " * most_common[0][0]
+    return min_indent or default
+
 def handle_indent(text_edit):
     cursor = text_edit.textCursor()
     doc   = text_edit.document()
@@ -41,9 +67,11 @@ def handle_indent(text_edit):
     before = full[:pos]
     after  = full[pos:pos+100]
 
+    indent_str = detect_indent_string(doc)
+
     level        = compute_indent_level(before)
-    inner_indent = "    " * level
-    outer_indent = "    " * max(0, level - 1)
+    inner_indent = indent_str * level
+    outer_indent = indent_str * max(0, level - 1)
 
     # 1) CIERRE inmediat o </tag> justo tras el cursor (sin salto de línea delante)
     if not after.startswith("\n"):

@@ -29,8 +29,10 @@ class IndentHandler:
             handled = self.custom_logic(text_edit)
             if handled:
                 return True
-
-        # fallback genérico
+        # Only apply fallback for 'plain' language
+        if self.language != "plain":
+            return False
+        # fallback genérico solo para 'plain'
         cursor = text_edit.textCursor()
         doc = text_edit.document()
         pos = cursor.position()
@@ -62,19 +64,10 @@ class IndentHandler:
             text_edit.setTextCursor(cursor)
             return True
 
-
-        # Fallbacks según lenguaje
+        # Fallbacks según lenguaje (solo para 'plain')
         extra_indent = ""
-        if self.language == "python":
-            if current_line.strip().endswith(":"):
-                extra_indent = "    "
-        elif self.language in ("javascript", "java", "c", "cpp"):
-            if current_line.strip().endswith("{"):
-                extra_indent = "    "
-
         cursor.insertText("\n" + indent + extra_indent)
         return True
-
 
     def _get_indent_prefix(self, line):
         return line[:len(line) - len(line.lstrip(" "))]

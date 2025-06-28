@@ -74,14 +74,36 @@ QTreeView::item:selected {
     color: #272822;
 }
 QScrollBar:vertical, QScrollBar:horizontal {
-    background: #3e3d32;
+    background: rgba(62, 61, 50, 0.5); /* semitransparent Monokai dark */
     border-radius: 4px;
     width: 10px;
     height: 10px;
+    margin: 0px;
 }
 QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
     background: #75715e;
     border-radius: 4px;
+    min-height: 20px;
+    min-width: 20px;
+}
+QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
+    background: #a59f85;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    background: none;
+    border: none;
+    height: 0px;
+    width: 0px;
+}
+QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical,
+QScrollBar::left-arrow:horizontal, QScrollBar::right-arrow:horizontal {
+    background: none;
+    border: none;
+}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical,
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: none;
 }
 QLabel {
     color: #f8f8f2;
@@ -126,17 +148,36 @@ QTreeView::item:selected {
 }
 @icon-color: #F8F8F2;
 QScrollBar:vertical, QScrollBar:horizontal {
-    background: #3e3d32;
+    background: rgba(62, 61, 50, 0.5); /* semitransparent Monokai dark */
     border-radius: 4px;
     width: 10px;
     height: 10px;
+    margin: 0px;
 }
 QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
     background: #75715e;
     border-radius: 4px;
+    min-height: 20px;
+    min-width: 20px;
 }
 QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
     background: #a59f85;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    background: none;
+    border: none;
+    height: 0px;
+    width: 0px;
+}
+QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical,
+QScrollBar::left-arrow:horizontal, QScrollBar::right-arrow:horizontal {
+    background: none;
+    border: none;
+}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical,
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: none;
 }
 QPlainTextEdit {
     background-color: #1e1e1e;

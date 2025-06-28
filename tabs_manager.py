@@ -7,6 +7,8 @@ from editor_widget import EditorWidget
 from PyQt5.QtWidgets import QTabBar
 from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import QMessageBox, QPushButton
+from PyQt5.QtGui import QIcon
+
 class CustomTabBar(QTabBar):
     def tabSizeHint(self, index):
         size = super().tabSizeHint(index)
@@ -18,7 +20,7 @@ class CustomTabBar(QTabBar):
 class TabsManager(QTabWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMovable(True)
+        self.setMovable(False)
         self.setTabBar(CustomTabBar())
         self.setTabsClosable(True)
         self.tabCloseRequested.connect(self.close_tab)
@@ -28,9 +30,51 @@ class TabsManager(QTabWidget):
         self.saved_texts = {}
         self.tabBar().setTabEnabled(self.indexOf(self._welcome_tab), False)  # No clickeable ni cerrable
         self.currentChanged.connect(self.on_tab_changed)
-        self.ext_map = {}   
+        self.ext_map = {}
         self.load_extensions()
         self.currentChanged.connect(self.on_tab_changed)
+        self.minimap_visible = True  # Estado global del minimapa
+        self._load_minimap_state()
+
+    def _load_minimap_state(self):
+        try:
+            complements_path = os.path.join(os.getcwd(), "complements.json")
+            if os.path.exists(complements_path):
+                with open(complements_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    self.minimap_visible = bool(data.get("minimap_visible", True))
+        except Exception as e:
+            print(f"⚠️ Error leyendo estado del minimapa: {e}")
+
+    def _save_minimap_state(self):
+        try:
+            data = {}
+            complements_path = os.path.join(os.getcwd(), "complements.json")
+            if os.path.exists(complements_path):
+                with open(complements_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            data["minimap_visible"] = self.minimap_visible
+            with open(complements_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+        except Exception as e:
+            print(f"⚠️ Error guardando estado del minimapa: {e}")
+
+    def on_minimap_toggled(self, visible):
+        self.minimap_visible = visible
+        self._save_minimap_state()
+        # Sincronizar todos los editores abiertos
+        for i in range(self.count()):
+            editor = self.widget(i)
+            if hasattr(editor, 'minimap'):
+                if visible:
+                    editor.minimap.show()
+                    editor.minimap_toggle_btn.setIcon(QIcon("icons/arrow-left.svg"))
+                    editor.setViewportMargins(editor.line_number_area_width(), 0, editor._minimap_width, 0)
+                else:
+                    editor.minimap.hide()
+                    editor.minimap_toggle_btn.setIcon(QIcon("icons/arrow-right.svg"))
+                    editor.setViewportMargins(editor.line_number_area_width(), 0, 12, 0)
+                editor.update()
 
     def show_welcome_tab(self):
         if self.indexOf(self._welcome_tab) == -1:
@@ -39,6 +83,8 @@ class TabsManager(QTabWidget):
         self.setCurrentIndex(self.indexOf(self._welcome_tab))
     def on_tab_changed(self, index):
         editor = self.widget(index)
+        if editor and hasattr(editor, "sync_minimap_state"):
+            editor.sync_minimap_state()
         if editor and hasattr(editor, "set_language"):
             lang = None
             main = self.parent()
@@ -87,7 +133,7 @@ class TabsManager(QTabWidget):
         if welcome_index != -1:
             self.removeTab(welcome_index)
 
-        editor = EditorWidget()
+        editor = EditorWidget(minimap_visible=self.minimap_visible)
         editor.language = language
         if file_path:
             self._file_paths[editor] = file_path
