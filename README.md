@@ -26,7 +26,7 @@ I’m thrilled to share **PowerEdit**, my very first open-source code editor pro
 
 ## 📥 How to download PowerEdit
 
-1. Go to the section [**Releases**](https://github.com/tu_usuario/PowerEdit/releases) of this repository.  
+1. Go to the section [**Releases**](https://github.com/ztamdev/PowerEdit/releases) of this repository.  
 2. Download the latest version for your operating system (Windows, macOS, Linux).
 3. Run the .exe installer:
    ```bash
@@ -50,7 +50,11 @@ I’m thrilled to share **PowerEdit**, my very first open-source code editor pro
 2. **Open issues** for any bugs or UX problems  
 3. **Submit pull requests** with enhancements or fixes  
 4. **Suggest integrations** (e.g. AI-powered code completion)  
-5. **Share** PowerEdit with friends and classmates  
+5. **Share** PowerEdit with friends and classmates
+
+ ## 🙌 Want to Contribute?
+
+We welcome contributions! Please read our [Contributing Guide](https://github.com/ZtaMDev/PowerEdit/blob/main/CONTRIBUTING.md) before making a pull request.
 
 ---
 
