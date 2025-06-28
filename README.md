@@ -4,7 +4,7 @@
 - Power Edit now have [**Documentation**](https://ztamdev.github.io/PowerEdit/)
 ---
 
-I’m thrilled to share **PowerEdit**, my very first open-source code editor project. After a month of intense development, it’s matured into something I’m proud of. Here on GitHub, you can:
+I’m thrilled to share **PowerEdit**, my first open-source code editor project. After a month of intense development, it’s matured into something I’m proud of. Here on GitHub, you can:
 
 - **Download**, **use**, and **explore** the editor freely  
 - **Contribute** improvements and new features  
