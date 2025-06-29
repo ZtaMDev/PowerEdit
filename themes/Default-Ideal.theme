@@ -268,5 +268,5 @@ QPlainTextEdit, QTextEdit {
 }
 
 @font-family: Cascadia Code;
-@font-size: 12px;
+@font-size: 11px;
 @icon-color: default;

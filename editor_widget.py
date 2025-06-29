@@ -27,10 +27,11 @@ class EditorWidget(QPlainTextEdit):
         super().__init__(parent)
         self._minimap_width = 120  # Initialize minimap width first!
         self.language = "python"
+        # Solo una vez: fuente inicial
         font = QFont("Fira Code", 12)
         font.setStyleHint(QFont.Monospace)
-        self._ignore_change_signal = False
         self.setFont(font)
+        self._ignore_change_signal = False
         self.pairs = {
             '(': ')',
             '[': ']',
@@ -54,11 +55,6 @@ class EditorWidget(QPlainTextEdit):
         self.indenter = IndentHandler("python")
         self.suggestions = AutoCompleteSuggestions(self)
         self.suggestions.load_language("python")
-        font = QFont("Courier New", 11)
-        font.setStyleHint(QFont.Monospace)
-        self.setFont(font)
-        self.setTabStopDistance(4 * self.fontMetrics().horizontalAdvance(' '))
-        self.setLineWrapMode(QPlainTextEdit.NoWrap)
 
         # Línea de números
         self.line_number_area = LineNumberArea(self)
@@ -70,7 +66,7 @@ class EditorWidget(QPlainTextEdit):
         self.highlight_current_line()
 
         # --- Minimap as fixed child on the right ---
-        self.minimap = MinimapWidget(self, self.highlighter, max_lines=500)
+        self.minimap = MinimapWidget(self, self.highlighter, max_lines=300)
         self.minimap.setParent(self)
         if minimap_visible:
             self.minimap.show()
@@ -372,9 +368,17 @@ class EditorWidget(QPlainTextEdit):
         return dock
 
     def toggle_minimap(self):
+        # Solo notificar al TabsManager, no cambiar nada localmente
+        if hasattr(self.parent(), 'on_minimap_toggled'):
+            self.parent().on_minimap_toggled(not self.minimap.isVisible())
+            return
+
         # Notificar al tab manager si existe
         if hasattr(self.parent(), 'on_minimap_toggled'):
             self.parent().on_minimap_toggled(not self.minimap.isVisible())
+            # Forzar guardado del estado del minimapa en el manager
+            if hasattr(self.parent(), '_save_minimap_state'):
+                self.parent()._save_minimap_state()
         # ...existing code...
         if self.minimap.isVisible():
             self.minimap.hide()

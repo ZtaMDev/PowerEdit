@@ -14,6 +14,7 @@ from PyQt5.QtCore import pyqtSignal, QModelIndex, Qt
 from PyQt5.QtGui import QPixmap, QPainter, QColor
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMenu, QAction, QInputDialog, QMessageBox
+from PyQt5.QtWidgets import QApplication  # Asegura que QApplication esté importado
 import time
 class CustomFileSystemModel(QFileSystemModel):
     def __init__(self, parent=None):
@@ -102,6 +103,7 @@ class FileExplorer(QWidget):
         rename_action = QAction("Rename", self)
         delete_action = QAction("Delete", self)
         new_file_action = QAction("New File", self)
+        properties_action = QAction("Properties", self)
 
         menu.addAction(rename_action)
         menu.addAction(delete_action)
@@ -109,6 +111,8 @@ class FileExplorer(QWidget):
         menu.addAction(new_file_action)
         new_folder_action = QAction("New Folder", self)
         menu.addAction(new_folder_action)
+        menu.addSeparator()
+        menu.addAction(properties_action)
         new_folder_action.triggered.connect(lambda: self.create_new_folder(index))
         # APLICAR ESTILO ACTUAL DEL TEMA DINÁMICAMENTE
         if hasattr(self.parent(), "menu_background") and hasattr(self.parent(), "menu_text_color"):
@@ -150,14 +154,187 @@ class FileExplorer(QWidget):
                 }
             """)
 
-
         # Conectar acciones
         rename_action.triggered.connect(lambda: self.rename_item(index))
         delete_action.triggered.connect(lambda: self.delete_item(index))
         new_file_action.triggered.connect(lambda: self.create_new_file(index))
+        properties_action.triggered.connect(lambda: self.show_properties_dialog(index))
 
         menu.exec_(self.tree.viewport().mapToGlobal(position))
 
+    def show_properties_dialog(self, index):
+        if not index.isValid():
+            return
+        path = self.model.filePath(index)
+        is_dir = self.model.isDir(index)
+        icon = self.model.folder_icon if is_dir else self.model.file_icon
+        # Detectar tipo
+        if is_dir:
+            tipo = "Folder"
+            ext = ""
+            lang = ""
+        else:
+            ext = os.path.splitext(path)[1].lstrip(".").lower()
+            # Buscar lenguaje usando .extend
+            lang = ext
+            extend_folder = "extend"
+            lang_name = None
+            if os.path.isdir(extend_folder):
+                for fname in os.listdir(extend_folder):
+                    if not fname.endswith(".extend"): continue
+                    try:
+                        import json
+                        rules = json.load(open(os.path.join(extend_folder, fname), encoding="utf-8"))
+                        exts = rules.get("extensions", [fname.replace(".extend","")])
+                        if ext in [e.lower() for e in exts]:
+                            lang_name = fname.replace(".extend","")
+                            break
+                    except Exception:
+                        pass
+            tipo = f".{ext} ({lang_name if lang_name else 'Unknown'})"
+        # Crear popup menos invasivo, fondo sólido y opaco, estilo oscuro neutro
+        dlg = QDialog(self, flags=Qt.FramelessWindowHint | Qt.Popup)
+        dlg.setModal(False)
+        dlg.setFixedWidth(320)
+        dlg.setStyleSheet("""
+            QDialog { background: #181a1b; color: #e0e0e0; border-radius: 10px; border: 2px solid #23272e; }
+            QLabel { font-size: 11.5px; font-family: Consolas, monospace; color: #e0e0e0; }
+            #IconLabel { margin-top: 8px; margin-bottom: 8px; }
+            QPushButton { background: #23272e; color: #e0e0e0; border: none; border-radius: 4px; padding: 4px 16px; font-size: 11px; }
+            QPushButton:hover { background: #444c56; }
+        """)
+        layout = QVBoxLayout(dlg)
+        layout.setContentsMargins(16, 10, 16, 10)
+        icon_label = QLabel()
+        icon_label.setObjectName("IconLabel")
+        icon_label.setPixmap(icon.pixmap(80,80))
+        icon_label.setAlignment(Qt.AlignHCenter)
+        layout.addWidget(icon_label)
+        # Propiedades organizadas
+        # Adaptar tamaño de fuente y dividir en dos líneas si la ruta es muy larga
+        max_chars_per_line = 55
+        min_font_size = 8
+        base_font_size = 11
+        path_display = path
+        font_size = base_font_size
+        if len(path) > max_chars_per_line * 2:
+            font_size = min_font_size
+            first_line = path[:max_chars_per_line]
+            second_line = path[max_chars_per_line:max_chars_per_line*2]
+            if len(path) > max_chars_per_line*2:
+                second_line += '...'
+            path_html = f"<b>Path:</b> <span style='color:#8be9fd;font-size:{font_size}px'>{first_line}<br>{second_line}</span>"
+        elif len(path) > max_chars_per_line:
+            font_size = 9
+            first_line = path[:max_chars_per_line]
+            second_line = path[max_chars_per_line:]
+            path_html = f"<b>Path:</b> <span style='color:#8be9fd;font-size:{font_size}px'>{first_line}<br>{second_line}</span>"
+        elif len(path) > 40:
+            font_size = 10
+            path_html = f"<b>Path:</b> <span style='color:#8be9fd;font-size:{font_size}px'>{path}</span>"
+        else:
+            path_html = f"<b>Path:</b> <span style='color:#8be9fd;font-size:{font_size}px'>{path}</span>"
+        path_label = QLabel(path_html)
+        # Obtener fecha de modificación
+        try:
+            import datetime
+            mtime = os.path.getmtime(path)
+            mod_dt = datetime.datetime.fromtimestamp(mtime)
+            mod_str = mod_dt.strftime('%Y-%m-%d %H:%M:%S')
+        except Exception:
+            mod_str = 'Unknown'
+        mod_label = QLabel(f"<b>Modified:</b> <span style='color:#bd93f9;font-size:11px'>{mod_str}</span>")
+        # Mostrar primero 'Calculating...' y calcular el tamaño en segundo plano
+        size_label = QLabel("<b>Size:</b> <span style='color:#50fa7b;font-size:11px'>Calculating...</span>")
+        type_label = QLabel(f"<b>Type:</b> <span style='color:#f1fa8c;font-size:11px'>{tipo}</span>")
+        path_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        type_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        mod_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        size_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        layout.addWidget(path_label)
+        layout.addWidget(type_label)
+        layout.addWidget(size_label)
+        layout.addWidget(mod_label)
+        btn = QPushButton("Close")
+        btn.clicked.connect(dlg.accept)
+        btn.setFixedWidth(70)
+        btn.setFocusPolicy(Qt.NoFocus)
+        layout.addWidget(btn, alignment=Qt.AlignRight)
+        # Posicionar el popup a la izquierda del archivo/carpeta, pero evitar que se salga de la pantalla
+        rect = self.tree.visualRect(index)
+        global_pos = self.tree.viewport().mapToGlobal(rect.topLeft())
+        dlg.adjustSize()
+        popup_x = global_pos.x() - dlg.width() - 8  # A la izquierda del item
+        popup_y = global_pos.y() + rect.height()//2 - dlg.height()//2  # Centrado verticalmente respecto al item
+        # Limitar para que no se salga de la pantalla
+        screen = QApplication.primaryScreen().availableGeometry()
+        if popup_x < screen.left():
+            # Si no cabe a la izquierda, mostrar a la derecha
+            popup_x = global_pos.x() + rect.width() + 8
+            if popup_x + dlg.width() > screen.right():
+                popup_x = screen.right() - dlg.width() - 8
+        if popup_y < screen.top():
+            popup_y = screen.top() + 8
+        if popup_y + dlg.height() > screen.bottom():
+            popup_y = screen.bottom() - dlg.height() - 8
+        dlg.move(popup_x, popup_y)
+        dlg.show()
+        # Calcular tamaño en segundo plano
+        from PyQt5.QtCore import QThread, pyqtSignal, QObject
+        class SizeWorker(QObject):
+            finished = pyqtSignal(str)
+            def __init__(self, path, is_dir):
+                super().__init__()
+                self.path = path
+                self.is_dir = is_dir
+            def run(self):
+                import os
+                def human_size(size):
+                    for unit in ['B','KB','MB','GB','TB']:
+                        if size < 1024.0:
+                            return f"{size:.2f} {unit}"
+                        size /= 1024.0
+                    return f"{size:.2f} PB"
+                def get_folder_size(folder):
+                    total = 0
+                    for dirpath, dirnames, filenames in os.walk(folder):
+                        for f in filenames:
+                            fp = os.path.join(dirpath, f)
+                            try:
+                                total += os.path.getsize(fp)
+                            except Exception:
+                                pass
+                    return total
+                try:
+                    if self.is_dir:
+                        size_bytes = get_folder_size(self.path)
+                        size_str = human_size(size_bytes)
+                    else:
+                        size_bytes = os.path.getsize(self.path)
+                        size_str = human_size(size_bytes)
+                except Exception:
+                    size_str = 'Unknown'
+                self.finished.emit(size_str)
+        def update_size_label(size_str):
+            size_label.setText(f"<b>Size:</b> <span style='color:#50fa7b;font-size:11px'>{size_str}</span>")
+        worker = SizeWorker(path, is_dir)
+        thread = QThread()
+        worker.moveToThread(thread)
+        worker.finished.connect(update_size_label)
+        thread.started.connect(worker.run)
+        worker.finished.connect(thread.quit)
+        thread.start()
+        # Mantener referencia al thread y worker para evitar recolección de basura
+        dlg._size_thread = thread
+        dlg._size_worker = worker
+        # Cerrar si pierde foco
+        dlg.setFocus()
+        dlg.activateWindow()
+        def close_on_focus_out(event):
+            thread.quit()
+            thread.wait()
+            dlg.close()
+        dlg.focusOutEvent = close_on_focus_out
 
     def create_new_folder(self, index: QModelIndex):
         if index.isValid() and self.model.isDir(index):

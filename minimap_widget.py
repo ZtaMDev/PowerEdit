@@ -3,18 +3,18 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPainter, QColor, QFont, QFontMetrics
 
 class MinimapWidget(QWidget):
-    def __init__(self, editor, highlighter=None, max_lines=300):
+    def __init__(self, editor, highlighter=None, max_lines=200):
         super().__init__()
         self.editor = editor
         self.highlighter = highlighter
         self.max_lines = max_lines
-        self.left_margin = 3
+        self.left_margin = 4
         self.setMinimumWidth(90)
         self.setMaximumWidth(90)
         self.setMinimumHeight(40)
         self.setStyleSheet("background-color: #2e2e2e; border: none; padding: 0px;")
-        self.font = QFont("Consolas", 3)
-        self.line_height = 3  # px per line, small but readable
+        self.font = QFont("Consolas", 1)
+        self.line_height = 2  # px per line, small but readable
         self.update_timer = QTimer(self)
         self.update_timer.setSingleShot(True)
         self.update_timer.timeout.connect(self.update)
@@ -161,3 +161,9 @@ class MinimapWidget(QWidget):
                 self.editor.setViewportMargins(self.editor.line_number_area_width(), 0, btn_size * 2 + 18 + scrollbar_width, 0)
         if hasattr(self.editor, 'update'):
             self.editor.update()
+        # --- Notificar al TabsManager para guardar el estado global y el archivo ---
+        parent = self.editor.parent() if hasattr(self.editor, 'parent') else None
+        if parent and hasattr(parent, 'on_minimap_toggled'):
+            # Solo notificar si el estado global no coincide
+            if getattr(parent, 'minimap_visible', visible) != visible:
+                parent.on_minimap_toggled(visible)

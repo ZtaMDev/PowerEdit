@@ -1,20 +1,36 @@
 import os, json
 from PyQt5.QtWidgets import (
-    QTabWidget, QWidget, QVBoxLayout, QLabel
+    QTabWidget, QWidget, QVBoxLayout, QLabel, QScrollArea,
+    QShortcut
 )
 from PyQt5.QtCore import Qt
 from editor_widget import EditorWidget
 from PyQt5.QtWidgets import QTabBar
 from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import QMessageBox, QPushButton
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPixmap, QKeySequence
 
 class CustomTabBar(QTabBar):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setUsesScrollButtons(True)  # Scroll real
+        self.setElideMode(Qt.ElideRight)
+        self.setMovable(True)
+        self.setExpanding(False)
+        self.setTabsClosable(True)
+        self.setFocusPolicy(Qt.StrongFocus)
+        # Ocultar flechas/botones de movimiento
+        self.setStyleSheet("""
+            QTabBar::scroller, QToolButton {
+                width: 0px; height: 0px; border: none; background: transparent;
+            }
+        """)
     def tabSizeHint(self, index):
         size = super().tabSizeHint(index)
         text = self.tabText(index)
         fm = self.fontMetrics()
-        width = fm.horizontalAdvance(text) + 100  # 100px padding
+        width = fm.horizontalAdvance(text) + 100  # padding
+        width = max(120, min(width, 300))  # mínimo 120px, máximo 300px
         return QSize(width, size.height())
 
 class TabsManager(QTabWidget):
@@ -35,6 +51,12 @@ class TabsManager(QTabWidget):
         self.currentChanged.connect(self.on_tab_changed)
         self.minimap_visible = True  # Estado global del minimapa
         self._load_minimap_state()
+
+        # Atajos de teclado para zoom de fuente en el editor activo
+        QShortcut(QKeySequence("Ctrl++"), self, activated=self.zoom_in_editor_font)
+        QShortcut(QKeySequence("Ctrl+="), self, activated=self.zoom_in_editor_font)  # Para algunos teclados
+        QShortcut(QKeySequence("Ctrl+-"), self, activated=self.zoom_out_editor_font)
+        QShortcut(QKeySequence("Ctrl+0"), self, activated=self.reset_editor_font)
 
     def _load_minimap_state(self):
         try:
@@ -60,18 +82,19 @@ class TabsManager(QTabWidget):
             print(f"⚠️ Error guardando estado del minimapa: {e}")
 
     def on_minimap_toggled(self, visible):
+        # Cambia el estado global y sincroniza todos los editores
         self.minimap_visible = visible
         self._save_minimap_state()
-        # Sincronizar todos los editores abiertos
+        # Forzar el estado en todos los editores usando setVisible
         for i in range(self.count()):
             editor = self.widget(i)
             if hasattr(editor, 'minimap'):
+                editor.minimap.setVisible(visible)
+                # Cambiar icono del botón
                 if visible:
-                    editor.minimap.show()
                     editor.minimap_toggle_btn.setIcon(QIcon("icons/arrow-left.svg"))
                     editor.setViewportMargins(editor.line_number_area_width(), 0, editor._minimap_width, 0)
                 else:
-                    editor.minimap.hide()
                     editor.minimap_toggle_btn.setIcon(QIcon("icons/arrow-right.svg"))
                     editor.setViewportMargins(editor.line_number_area_width(), 0, 12, 0)
                 editor.update()
@@ -82,9 +105,12 @@ class TabsManager(QTabWidget):
             self.tabBar().setTabEnabled(self.indexOf(self._welcome_tab), False)
         self.setCurrentIndex(self.indexOf(self._welcome_tab))
     def on_tab_changed(self, index):
+        # Sincronizar el estado del minimapa en TODOS los editores abiertos
+        for i in range(self.count()):
+            editor = self.widget(i)
+            if hasattr(editor, "sync_minimap_state"):
+                editor.sync_minimap_state()
         editor = self.widget(index)
-        if editor and hasattr(editor, "sync_minimap_state"):
-            editor.sync_minimap_state()
         if editor and hasattr(editor, "set_language"):
             lang = None
             main = self.parent()
@@ -98,9 +124,10 @@ class TabsManager(QTabWidget):
             if not lang:
                 lang = "plain"
             editor.set_language(lang)
-
         if hasattr(self.parent(), "update_run_button"):
             self.parent().update_run_button(editor)
+        # --- Guardar el estado del minimapa tras cada cambio de tab ---
+        self._save_minimap_state()
 
     def _create_welcome_tab(self):
         widget = QWidget()
@@ -132,6 +159,16 @@ class TabsManager(QTabWidget):
 
         if welcome_index != -1:
             self.removeTab(welcome_index)
+
+        # Soporte para imágenes
+        image_exts = {"png", "jpg", "jpeg", "gif", "bmp", "webp", "ico"}
+        ext = os.path.splitext(file_path or "")[1].lstrip(".").lower() if file_path else ""
+        if ext in image_exts and file_path and os.path.isfile(file_path):
+            widget = ImageTab(file_path)
+            index = self.addTab(widget, os.path.basename(file_path))
+            self.setCurrentIndex(index)
+            self.setTabToolTip(index, file_path)
+            return widget
 
         editor = EditorWidget(minimap_visible=self.minimap_visible)
         editor.language = language
@@ -205,15 +242,14 @@ class TabsManager(QTabWidget):
         
     def on_editor_modified(self, editor):
         if getattr(editor, "_ignore_change_signal", False):
-            return  # Ignora el cambio porque fue intencional(carga de archivos grandes 'OPTIMIZADO' que se noten la comillas)
-        
+            return  # Ignora el cambio porque fue intencional (carga de archivos grandes)
         current_text = editor.toPlainText()
         saved_text = self.saved_texts.get(editor, "")
         if current_text != saved_text:
             index = self.indexOf(editor)
             self.update_tab_text(index, modified=True)
             main = self.parent()
-            if hasattr(main, "live_preview") and main.live_preview.refresh:
+            if hasattr(main, "live_preview") and getattr(main.live_preview, "refresh", False):
                 main._reload_live_preview()
 
     def close_tab(self, index):
@@ -292,12 +328,25 @@ class TabsManager(QTabWidget):
         
     def current_editor(self):
         widget = self.currentWidget()
+        # Si es una pestaña de imagen, no tiene set_language ni document
         if widget and hasattr(widget, "set_language"):
             return widget
         return None
+
     def update_tab_text(self, index, file_path=None, language=None, modified=False):
         widget = self.widget(index)
-        
+        # Si es una pestaña de imagen, solo mostrar el nombre
+        if hasattr(widget, "label") and hasattr(widget, "scroll"):
+            if file_path:
+                display_text = os.path.basename(file_path)
+                tooltip = file_path
+            else:
+                display_text = "Image"
+                tooltip = ""
+            self.setTabText(index, display_text)
+            self.setTabToolTip(index, tooltip or display_text)
+            return
+
         if language is None and hasattr(widget, 'language'):
             language = getattr(widget, 'language', None)
         
@@ -320,3 +369,137 @@ class TabsManager(QTabWidget):
 
         self.setTabText(index, display_text)
         self.setTabToolTip(index, tooltip or display_text)
+
+    def zoom_in_editor_font(self):
+        editor = self.current_editor()
+        if editor:
+            font = editor.font()
+            size = font.pointSize()
+            if size <= 0:
+                size = 12  # fallback seguro
+            size = min(size + 1, 120)  # Zoom de 1 en 1
+            font.setPointSize(size)
+            editor.setFont(font)
+            editor.setTabStopDistance(4 * editor.fontMetrics().horizontalAdvance(' '))
+            if hasattr(editor, 'update_line_number_area_width'):
+                editor.update_line_number_area_width(0)
+            editor.update()
+            # Modifica el QSS global
+            main = self.parent()
+            while main and not hasattr(main, 'set_editor_font_size'):
+                main = getattr(main, 'parent', lambda: None)()
+            if main and hasattr(main, 'set_editor_font_size'):
+                main.set_editor_font_size(size)
+                if hasattr(main, 'update_theme_font_size'):
+                    main.update_theme_font_size(size)
+
+    def zoom_out_editor_font(self):
+        editor = self.current_editor()
+        if editor:
+            font = editor.font()
+            size = font.pointSize()
+            if size <= 0:
+                size = 12  # fallback seguro
+            size = max(size - 1, 4)  # Zoom de 1 en 1
+            font.setPointSize(size)
+            editor.setFont(font)
+            editor.setTabStopDistance(4 * editor.fontMetrics().horizontalAdvance(' '))
+            if hasattr(editor, 'update_line_number_area_width'):
+                editor.update_line_number_area_width(0)
+            editor.update()
+            # Modifica el QSS global
+            main = self.parent()
+            while main and not hasattr(main, 'set_editor_font_size'):
+                main = getattr(main, 'parent', lambda: None)()
+            if main and hasattr(main, 'set_editor_font_size'):
+                main.set_editor_font_size(size)
+                if hasattr(main, 'update_theme_font_size'):
+                    main.update_theme_font_size(size)
+
+    def reset_editor_font(self):
+        editor = self.current_editor()
+        if editor:
+            font = editor.font()
+            font.setPointSize(12)
+            editor.setFont(font)
+            editor.setTabStopDistance(4 * editor.fontMetrics().horizontalAdvance(' '))
+            if hasattr(editor, 'update_line_number_area_width'):
+                editor.update_line_number_area_width(0)
+            editor.update()
+            # Modifica el QSS global
+            main = self.parent()
+            while main and not hasattr(main, 'set_editor_font_size'):
+                main = getattr(main, 'parent', lambda: None)()
+            if main and hasattr(main, 'set_editor_font_size'):
+                main.set_editor_font_size(12)
+                if hasattr(main, 'update_theme_font_size'):
+                    main.update_theme_font_size(12)
+
+    def wheelEvent(self, event):
+        # Desactivar zoom con Ctrl+scroll (solo scroll normal)
+        super().wheelEvent(event)
+
+class ImageTab(QWidget):
+    def __init__(self, image_path):
+        super().__init__()
+        # Forzar fondo oscuro en todos los niveles
+        self.setStyleSheet("QWidget { background-color: #181818 !important; }")
+        layout = QVBoxLayout(self)
+        self.scroll = QScrollArea(self)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setStyleSheet("background-color: #181818 !important;")
+        self.label = QLabel()
+        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setStyleSheet("background-color: #181818 !important;")
+        self._image_path = image_path
+        self._pixmap = QPixmap(image_path)
+        self._zoom = 1.0
+        if self._pixmap.isNull():
+            self.label.setText("<b>Could not load image.</b>")
+        else:
+            self._update_pixmap()
+        self.scroll.setWidget(self.label)
+        layout.addWidget(self.scroll)
+        self.setLayout(layout)
+        self.label.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.label.customContextMenuRequested.connect(self._show_context_menu)
+
+    def _update_pixmap(self):
+        if self._pixmap.isNull():
+            return
+        w = int(self._pixmap.width() * self._zoom)
+        h = int(self._pixmap.height() * self._zoom)
+        scaled = self._pixmap.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.label.setPixmap(scaled)
+        self.label.resize(scaled.size())  # Asegura que el QLabel se ajuste al tamaño de la imagen
+        self.label.setMinimumSize(scaled.size())
+        self.scroll.ensureVisible(self.label.width() // 2, self.label.height() // 2)
+
+    def wheelEvent(self, event):
+        if event.modifiers() & Qt.ControlModifier:
+            delta = event.angleDelta().y()
+            if delta > 0:
+                self._zoom = min(self._zoom * 1.15, 10.0)
+            else:
+                self._zoom = max(self._zoom / 1.15, 0.05)
+            self._update_pixmap()
+            event.accept()
+        else:
+            super().wheelEvent(event)
+
+    def _show_context_menu(self, pos):
+        from PyQt5.QtWidgets import QMenu
+        menu = QMenu(self)
+        zoom_in = menu.addAction("Zoom in (+)")
+        zoom_out = menu.addAction("Zoom out (-)")
+        reset = menu.addAction("Reset zoom")
+        act = menu.exec_(self.label.mapToGlobal(pos))
+        if act == zoom_in:
+            self._zoom = min(self._zoom * 1.15, 10.0)
+            self._update_pixmap()
+        elif act == zoom_out:
+            self._zoom = max(self._zoom / 1.15, 0.05)
+            self._update_pixmap()
+        elif act == reset:
+            self._zoom = 1.0
+            self._update_pixmap()

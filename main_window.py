@@ -716,6 +716,30 @@ class MainWindow(QMainWindow):
         self.save_settings()
         self.update_run_button_for_current_tab()
 
+    def new_window(self):
+        # Crear un settings.json limpio
+        default_settings = {
+            "theme": "Default-Ideal",
+            "project_root": None,
+            "open_tabs": []
+        }
+        try:
+            with open("settings.json", "w", encoding="utf-8") as f:
+                json.dump(default_settings, f, indent=4)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Can't create new project:\n{e}")
+            return
+
+        # Limpiar pestañas y archivo actual
+        self.tabs.clear()
+        self.current_files.clear()
+        self.tabs.show_welcome_tab()
+        # Limpiar explorador de archivos
+        self.file_explorer.set_root(None)
+        self.file_explorer.root_folder_label.hide()
+
+        self.load_theme("Default-Ideal")
+
     def reload_current_theme(self):
         try:
             with open("settings.json", "r", encoding="utf-8") as f:
@@ -788,12 +812,27 @@ class MainWindow(QMainWindow):
 
     def open_file_from_path(self, path, lang=None):
         if self.focus_tab_with_path(path):
+            # Si ya existe, asegúrate de fondo oscuro si es imagen
+            idx = self.tabs.currentIndex()
+            widget = self.tabs.widget(idx)
+            image_exts = {"png", "jpg", "jpeg", "gif", "bmp", "webp", "ico"}
+            ext = os.path.splitext(path)[1].lstrip(".").lower()
+            if ext in image_exts and hasattr(widget, "label") and hasattr(widget, "scroll"):
+                widget.setStyleSheet("background-color: #181818;")
             return 
 
         try:
+            image_exts = {"png", "jpg", "jpeg", "gif", "bmp", "webp", "ico"}
+            ext = os.path.splitext(path)[1].lstrip(".").lower()
+            if ext in image_exts:
+                widget = self.tabs.new_tab(file_path=path)
+                widget.setStyleSheet("background-color: #181818;")
+                self.current_files[widget] = path
+                self.save_settings()
+                return
+
             # Determinar lenguaje
             if lang is None:
-                ext = os.path.splitext(path)[1].lstrip(".").lower()
                 lang = self.ext_map.get(ext, "plain")
 
             # Crear la pestaña vacía
@@ -824,10 +863,24 @@ class MainWindow(QMainWindow):
 
     def open_file_from_explorer(self, file_path):
         if self.focus_tab_with_path(file_path):
+            idx = self.tabs.currentIndex()
+            widget = self.tabs.widget(idx)
+            image_exts = {"png", "jpg", "jpeg", "gif", "bmp", "webp", "ico"}
+            ext = os.path.splitext(file_path)[1].lstrip(".").lower()
+            if ext in image_exts and hasattr(widget, "label") and hasattr(widget, "scroll"):
+                widget.setStyleSheet("background-color: #181818;")
             return
 
         try:
+            image_exts = {"png", "jpg", "jpeg", "gif", "bmp", "webp", "ico"}
             ext = os.path.splitext(file_path)[1].lstrip(".").lower()
+            if ext in image_exts:
+                widget = self.tabs.new_tab(file_path=file_path)
+                widget.setStyleSheet("background-color: #181818;")
+                self.current_files[widget] = file_path
+                self.save_settings()
+                return
+
             lang = self.ext_map.get(ext, "plain")
 
             # Crear nueva pestaña vacía
@@ -856,48 +909,28 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error opening file ", str(e))
 
-    def focus_tab_with_path(self, file_path):
-        # Devuelve True si se encontró y enfocó
-        for i in range(self.tabs.count()):
-            editor = self.tabs.widget(i)
-            if self.current_files.get(editor) == file_path:
-                self.tabs.setCurrentIndex(i)
-                return True
-        return False
-
-    def new_window(self):
-        # Crear un settings.json limpio
-        default_settings = {
-            "theme": "Default-Ideal",
-            "project_root": None,
-            "open_tabs": []
-        }
-        try:
-            with open("settings.json", "w", encoding="utf-8") as f:
-                json.dump(default_settings, f, indent=4)
-            
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Can't create new project:\n{e}")
-            return
-
-        # Limpiar pestañas y archivo actual
-        self.tabs.clear()
-        self.current_files.clear()
-        self.tabs.show_welcome_tab()
-        # Limpiar explorador de archivos
-        self.file_explorer.set_root(None)
-        self.file_explorer.root_folder_label.hide()
-
-        self.load_theme("Default-Ideal")
-
     def open_file(self):
         path, _ = QFileDialog.getOpenFileName(self, "Open File")
         if not path or self.focus_tab_with_path(path):
+            if path:
+                idx = self.tabs.currentIndex()
+                widget = self.tabs.widget(idx)
+                image_exts = {"png", "jpg", "jpeg", "gif", "bmp", "webp", "ico"}
+                ext = os.path.splitext(path)[1].lstrip(".").lower()
+                if ext in image_exts and hasattr(widget, "label") and hasattr(widget, "scroll"):
+                    widget.setStyleSheet("background-color: #181818;")
             return
 
         self.save_settings()
         try:
+            image_exts = {"png", "jpg", "jpeg", "gif", "bmp", "webp", "ico"}
             ext = os.path.splitext(path)[1].lstrip(".").lower()
+            if ext in image_exts:
+                widget = self.tabs.new_tab(file_path=path)
+                widget.setStyleSheet("background-color: #181818;")
+                self.current_files[widget] = path
+                return
+
             lang = self.ext_map.get(ext, "plain")
 
             # Crear pestaña vacía
@@ -1084,6 +1117,55 @@ class MainWindow(QMainWindow):
                 event.ignore()
                 return
         event.accept()
+
+    def focus_tab_with_path(self, file_path):
+        # Devuelve True si se encontró y enfocó
+        for i in range(self.tabs.count()):
+            editor = self.tabs.widget(i)
+            if self.current_files.get(editor) == file_path:
+                self.tabs.setCurrentIndex(i)
+                return True
+        return False
+
+    def set_editor_font_size(self, size):
+        # Cambia el font-size en el QSS solo para QPlainTextEdit
+        css = self.current_theme_css if hasattr(self, 'current_theme_css') else ""
+        # Elimina cualquier font-size previo para QPlainTextEdit
+        css = re.sub(r'(QPlainTextEdit\s*\{[^}]*?)font-size:\s*[^;]+;?', r'\1', css, flags=re.MULTILINE)
+        # Añade el nuevo font-size
+        css = re.sub(r'(QPlainTextEdit\s*\{)', r'\1\n    font-size: %dpx;' % size, css, count=1)
+        self.setStyleSheet(css)
+        self.tabs.setStyleSheet(css)
+        self.file_explorer.setStyleSheet(css)
+        if hasattr(self.console_dock, "apply_theme"):
+            self.console_dock.apply_theme(css)
+        self.dock.setStyleSheet(css)
+        for i in range(self.tabs.count()):
+            editor = self.tabs.widget(i)
+            if hasattr(editor, "setStyleSheet"):
+                editor.setStyleSheet(css)
+        self.current_theme_css = css
+
+    def update_theme_font_size(self, size):
+        # Actualiza solo el atributo font-size en el .theme actual
+        if not hasattr(self, 'current_theme_path') or not self.current_theme_path:
+            return
+        try:
+            with open(self.current_theme_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+            found = False
+            for i, line in enumerate(lines):
+                if line.strip().startswith('@font-size:'):
+                    lines[i] = f'@font-size: {size}px;\n'
+                    found = True
+                    break
+            if not found:
+                # Si no existe, lo agrega al final
+                lines.append(f'@font-size: {size}px;\n')
+            with open(self.current_theme_path, 'w', encoding='utf-8') as f:
+                f.writelines(lines)
+        except Exception as e:
+            print(f"[update_theme_font_size] Error: {e}")
 
 from PyQt5.QtWidgets import QDockWidget, QWidget, QHBoxLayout, QLabel, QPushButton
 from PyQt5.QtCore import Qt
