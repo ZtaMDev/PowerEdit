@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import QThread, pyqtSignal
 
 GITHUB_REPO    = "ZtaMDev/PowerEdit"
-CURRENT_VERSION= "1.0.2"
+CURRENT_VERSION= "1.0.3"
 APP_EXECUTABLE = os.path.join(os.path.dirname(sys.argv[0]), "app.exe")
 def get_base_dir():
     if getattr(sys, "frozen", False):

@@ -4,3 +4,4 @@ pyte
 pyqt5-tools
 mkdocs 
 mkdocs-material
+markdown
