@@ -3,6 +3,10 @@ import json
 import os
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QTextEdit
 from PyQt5.QtCore import Qt
+import markdown
+from PyQt5.QtWidgets import QTextBrowser
+from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtCore import QUrl
 
 class VersionPopup(QDialog):
     def __init__(self, repo_url, version=None, parent=None, version_path=None):
@@ -51,8 +55,7 @@ class VersionPopup(QDialog):
         self.label = QLabel("")
         self.label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.label)
-        self.release_notes = QTextEdit()
-        self.release_notes.setReadOnly(True)
+        self.release_notes = QWebEngineView()
         layout.addWidget(self.release_notes)
         self.close_btn = QPushButton("Close")
         self.close_btn.clicked.connect(self.accept)
@@ -67,7 +70,7 @@ class VersionPopup(QDialog):
                 releases = resp.json()
                 if not releases:
                     self.label.setText("No releases available.")
-                    self.release_notes.setText("")
+                    self.release_notes.setHtml("")
                     return
                 if version:
                     release = next((r for r in releases if r['tag_name'] == version), releases[0])
@@ -76,14 +79,31 @@ class VersionPopup(QDialog):
                 notes = release.get('body', 'No release notes.')
                 tag = release.get('tag_name', '')
                 self.label.setText(f"Release notes of {tag}")
-                self.release_notes.setText(notes)
+
+                # Convertimos markdown a HTML
+                html = markdown.markdown(notes, extensions=["fenced_code", "tables"])
+
+                styled_html = f"""
+                <html><head><style>
+                    body {{ background: #23272e; color: #dcdcdc; font-family: Consolas, monospace; font-size: 13px; }}
+                    h1, h2, h3 {{ color: #ffffff; }}
+                    code {{ background-color: #2d2d2d; padding: 2px 4px; border-radius: 4px; }}
+                    pre {{ background-color: #2d2d2d; padding: 10px; border-radius: 4px; overflow-x: auto; }}
+                    table {{ border-collapse: collapse; width: 100%; }}
+                    th, td {{ border: 1px solid #555; padding: 4px; }}
+                    a {{ color: #4ea1f2; }}
+                </style></head><body>{html}</body></html>
+                """
+
+                self.release_notes.setHtml(styled_html, baseUrl=QUrl("https://github.com"))
                 self.write_version_json(tag)
             else:
                 self.label.setText(f"Error fetching releases: {resp.status_code}")
-                self.release_notes.setText("")
+                self.release_notes.setHtml("")
         except Exception as e:
             self.label.setText("Network error")
-            self.release_notes.setText(str(e))
+            self.release_notes.setHtml(f"<pre>{e}</pre>")
+
 
     def write_version_json(self, version):
         try:
