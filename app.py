@@ -1,27 +1,30 @@
 # app.py
 import sys
 import time
-
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QIcon
 from main_window import MainWindow
 
 def main():
-    # 1) Crear la aplicación
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon("poweredit.ico"))
 
-    # 3) Inicializar todo (tema, docks, tabs, etc.) ANTES de mostrar
-    start = time.perf_counter()
     window = MainWindow()
+    window.setAttribute(Qt.WA_DontShowOnScreen, True)
+    window.show()
+    start = time.perf_counter()
+    app.processEvents()
+
     end = time.perf_counter()
+
     print(f"[DEBUG] Inicio de la app tomó {end - start:.4f} segundos")
 
-    # 5) Mostrar la ventana UNA sola vez que ya esté todo cargado
-    window.show()
+    window.setAttribute(Qt.WA_DontShowOnScreen, False)
+    window.hide()
+    QTimer.singleShot(0, window.show)
 
-    # 6) Entrar al loop de eventos
+    QTimer.singleShot(0, window.load_extensions_manager)
     sys.exit(app.exec_())
 
 if __name__ == "__main__":

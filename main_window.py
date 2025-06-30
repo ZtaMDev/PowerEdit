@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import (
     QDialog, QLabel, QVBoxLayout, QPushButton,
     QFontComboBox, QSpinBox, QHBoxLayout, QMessageBox, QFileDialog
 )
+import importlib.util
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QProgressDialog, QApplication
 from PyQt5.QtCore import Qt
@@ -35,7 +36,7 @@ from utils.custom_dock_widget import CustomDockWidget
 from utils.download_dialog import DownloadDialog
 from PyQt5.QtCore import QThread
 import json
-
+from editor_api import EditorAPI
 class SettingsWriter(QThread):
     def __init__(self, settings: dict, parent=None):
         super().__init__(parent)
@@ -166,10 +167,36 @@ class MainWindow(QMainWindow):
         self.tabs.currentChanged.connect(self.update_run_button_for_current_tab)
         
         self.update_run_button_for_current_tab()  # inicial
-        # Arrancamos el “servidor” (con el folder del proyecto o cwd)
+        
+    def load_extensions_manager(self):
+        self.extensions = []
+        extensions_dir = "extensions"
+        if not os.path.exists(extensions_dir):
+            os.makedirs(extensions_dir)
+            print("[Extensions] Created extensions directory.")
 
-        # --- VersionPopup: mostrar solo si la versión de GitHub es diferente a la de version.json ---
-        # (Flag eliminado, ahora se maneja en showEvent)
+        for filename in os.listdir(extensions_dir):
+            if filename.endswith(".py"):
+                path = os.path.join(extensions_dir, filename)
+                spec = importlib.util.spec_from_file_location(filename[:-3], path)
+                module = importlib.util.module_from_spec(spec)
+                try:
+                    spec.loader.exec_module(module)
+                    ext_name = getattr(module, "name", filename)
+                    enabled = getattr(module, "enabled", True)
+                    api = EditorAPI(self, extension_name=ext_name)
+                    if not enabled:
+                        print(f"[Extensions] Extension '{ext_name}' detected but disabled (enabled=False).")
+                    else:
+                        if hasattr(module, "setup"):
+                            print(f"[Extensions] Loaded extension '{ext_name}'")
+                            module.setup(api)
+                        else:
+                            print(f"[Extensions] Extension '{ext_name}' does not have a setup(api) function.")
+                    self.extensions.append(module)
+                except Exception as e:
+                    print(f"[Extensions] Error loading extension '{filename}': {e}")
+
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -691,7 +718,7 @@ class MainWindow(QMainWindow):
                 act.triggered.connect(lambda _, name=theme_name: self.load_theme(name))
                 theme_menu.addAction(act)
 
-        reload_theme_act = QAction("Restart Actual Theme", self)
+        reload_theme_act = QAction("Reload Actual Theme", self)
         reload_theme_act.triggered.connect(self.reload_current_theme)
         theme_menu.addSeparator()
         theme_menu.addAction(reload_theme_act)
@@ -747,7 +774,36 @@ class MainWindow(QMainWindow):
         self.update_run_button_for_current_tab()
 
     def new_window(self):
-        # Crear un settings.json limpio
+        # Verificar si hay cambios sin guardar (igual que closeEvent)
+        unsaved = []
+        for i in range(self.tabs.count()):
+            editor = self.tabs.widget(i)
+            # Saltar pestaña de bienvenida
+            if hasattr(self.tabs, '_welcome_tab') and editor == self.tabs._welcome_tab:
+                continue
+            if hasattr(editor, 'toPlainText'):
+                current = editor.toPlainText()
+                saved = self.tabs.saved_texts.get(editor, "")
+                if current != saved:
+                    unsaved.append(self.tabs.tabText(i))
+
+        if unsaved:
+            msg = (
+                "There are unsaved changes in the following tabs: \n\n" +
+                "\n".join(unsaved) +
+                "\n\nIf you create a new window now, all unsaved changes will be lost.\n\nDo you want to continue?"
+            )
+            reply = QMessageBox.warning(
+                self,
+                "Unsaved Changes",
+                msg,
+                QMessageBox.Yes | QMessageBox.Cancel,
+                QMessageBox.Cancel
+            )
+            if reply != QMessageBox.Yes:
+                return  # Cancelado por el usuario
+
+        # Continuar con nueva ventana limpia
         default_settings = {
             "theme": "Default-Ideal",
             "project_root": None,
@@ -760,15 +816,13 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"Can't create new project:\n{e}")
             return
 
-        # Limpiar pestañas y archivo actual
         self.tabs.clear()
         self.current_files.clear()
         self.tabs.show_welcome_tab()
-        # Limpiar explorador de archivos
         self.file_explorer.set_root(None)
         self.file_explorer.root_folder_label.hide()
-
         self.load_theme("Default-Ideal")
+
 
     def reload_current_theme(self):
         try:
@@ -1090,19 +1144,10 @@ class MainWindow(QMainWindow):
         dialog.setStyleSheet(self.styleSheet())
         label = QLabel("""
     <b>PowerEdit</b> is a lightweight code editor built with PyQt5<br><br>
-    Tabs support for multiple files<br>
-    Extensible syntax highlighting using <code>.extend</code> files<br>
-    Integrated file explorer with project root selection<br>
-    Integrated interactive console with script execution and command history<br>
-    Right-click support in the terminal to open selected URLs in Live Preview<br>
-    Live Preview panel to render HTML files or external URLs and frameworks like flask<br>
-    External URL support with prompt input and persistent visibility<br>
-    Auto-indentation behavior adapted to the current file type<br>
-    Customizable theme system using <code>.theme</code> files<br>
-    Saves settings, open tabs, project folder, and active theme across sessions<br>
-    Smart tab management: Live Preview visibility updates when switching or closing tabs<br><br>
-    <b>Author:</b> ZtaDev<br>
-    <b>Version:</b> 1.0 Beta<br>
+    <b>For more information visit: https://github.com/ZtaMDev/PowerEdit</b>
+    <b>See the release notes here: https://github.com/ZtaMDev/PowerEdit/releases</b>
+    <b>Author:</b> ZtaMDev<br>
+    <b>Version:</b> 1.0.4 Beta<br>
     <b>License:</b> MIT License
     """)
         label.setTextFormat(Qt.RichText)
