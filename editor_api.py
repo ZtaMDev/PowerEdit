@@ -159,6 +159,25 @@ class EditorAPI:
         index = self.main_window.tabs.currentIndex()
         if index >= 0:
             self.main_window.tabs.close_tab(index)
+    
+    def get_current_tab_file_path(self):
+        if not self.main_window or not hasattr(self.main_window, 'tabs'):
+            return None
+        tabs = self.main_window.tabs
+        editor = tabs.currentWidget()
+        if editor in tabs._file_paths:
+            return tabs._file_paths[editor]
+        return None
+
+    def is_current_tab_welcome(self):
+        if not self.main_window or not hasattr(self.main_window, 'tabs'):
+            return False
+        tabs = self.main_window.tabs
+        index = tabs.currentIndex()
+        if index < 0:
+            return False
+        widget = tabs.widget(index)
+        return widget == tabs._welcome_tab
 
     def get_current_tab_name(self):
         if not self.main_window or not hasattr(self.main_window, 'tabs'):
