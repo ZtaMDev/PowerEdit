@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QTabWidget, QWidget, QVBoxLayout, QLabel, QScrollArea,
     QShortcut
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from editor_widget import EditorWidget
 from PyQt5.QtWidgets import QTabBar
 from PyQt5.QtCore import QSize
@@ -34,6 +34,7 @@ class CustomTabBar(QTabBar):
         return QSize(width, size.height())
 
 class TabsManager(QTabWidget):
+    close_live_preview_requested = pyqtSignal(str)
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMovable(False)
@@ -264,15 +265,13 @@ class TabsManager(QTabWidget):
         live_path = getattr(main.live_preview, "last_loaded_path", None)
         is_external = getattr(main.live_preview, "external_url", None)
 
+        # Si corresponde, emite la señal para cerrar el live preview en segundo plano
         if (
             live_path and current_path and
             os.path.normpath(live_path) == os.path.normpath(current_path) and
             not is_external
         ):
-            main.live_preview.user_minimized = True
-            main.live_preview.stop_server()
-            main.live_preview.hide()
-
+            self.close_live_preview_requested.emit(current_path)
 
         if isinstance(widget, EditorWidget):
             current_text = widget.toPlainText()
@@ -316,11 +315,9 @@ class TabsManager(QTabWidget):
                 elif msgbox.clickedButton() == cancelar_btn:
                     return  # No cerrar
                 # Si descarta cambios, simplemente continúa
-        
         self.removeTab(index)
         if hasattr(self.parent(), "save_settings"):
             self.parent().save_settings()
-
         if self.count() == 0:
             self.addTab(self._welcome_tab, "Welcome")
             self.tabBar().setTabEnabled(self.indexOf(self._welcome_tab), False)

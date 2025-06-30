@@ -33,6 +33,21 @@ import time
 from utils.file_loading import load_large_file_to_editor
 from utils.custom_dock_widget import CustomDockWidget
 from utils.download_dialog import DownloadDialog
+from PyQt5.QtCore import QThread
+import json
+
+class SettingsWriter(QThread):
+    def __init__(self, settings: dict, parent=None):
+        super().__init__(parent)
+        self.settings = settings
+
+    def run(self):
+        try:
+            with open("settings.json", "w", encoding="utf-8") as f:
+                json.dump(self.settings, f, indent=4)
+        except Exception as e:
+            print(f"⚠️ Error writing settings in thread: {e}")
+
 class MainWindow(QMainWindow):
     def __init__(self):
         # Crear settings.json por defecto si no existe
@@ -52,6 +67,7 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 1000, 700)
         self._html_previewed_editors = set()
         self.tabs = TabsManager()
+        self.tabs.close_live_preview_requested.connect(self.close_live_preview_background)
         self.tabs.current_editor()
         self.auto_refresh = False
         self.setCentralWidget(self.tabs)
@@ -336,7 +352,7 @@ class MainWindow(QMainWindow):
                 }}
             """)
 
-    def save_settings(self):
+    def schedule_save_settings(self):
         try:
             project_root = getattr(self.file_explorer, 'project_root', None)
             open_tabs = []
@@ -347,10 +363,9 @@ class MainWindow(QMainWindow):
                     lang = getattr(editor, "language", "plain")
                     open_tabs.append({"path": path, "language": lang})
 
-            # Página activa
             active_tab = self.tabs.currentIndex()
 
-            # Mantener tema cargado (lee el existente para no perderlo)
+            # Obtener tema existente (si existe)
             theme_name = None
             try:
                 with open("settings.json", "r", encoding="utf-8") as f:
@@ -366,11 +381,22 @@ class MainWindow(QMainWindow):
                 "active_tab": active_tab
             }
 
-            with open("settings.json", "w", encoding="utf-8") as f:
-                json.dump(settings, f, indent=4)
+            # 🧵 Guardar en segundo plano con un hilo
+            self.save_thread = SettingsWriter(settings)
+            self.save_thread.start()
 
         except Exception as e:
-            print(f"Can't save configuration: {e}")
+            print(f"⚠️ Can't prepare configuration to save: {e}")
+
+    def save_settings(self):
+        if hasattr(self, "_save_timer") and self._save_timer.isActive():
+            self._save_timer.stop()
+
+        self._save_timer = QTimer()
+        self._save_timer.setSingleShot(True)
+        self._save_timer.timeout.connect(self.schedule_save_settings)
+        self._save_timer.start(300)  # espera 300ms antes de ejecutar
+
 
     def run_current_file(self, editor=None):
         if editor is None:
@@ -456,13 +482,17 @@ class MainWindow(QMainWindow):
                 # Si decide no guardar, usar la versión en disco (si existe)
                 if not os.path.isfile(path):
                     return 
-        
         # 3) Lanzar la vista previa con la versión en disco
         if path and os.path.isfile(path):
-            # Lanzar con un pequeño retraso para no bloquear la UI
+            # Mostrar cursor de espera antes de cargar el live preview
+            from PyQt5.QtWidgets import QApplication
+            from PyQt5.QtCore import QTimer
+            QApplication.setOverrideCursor(Qt.WaitCursor)
             QTimer.singleShot(0, lambda: self.live_preview.load_html_from_file(path))
             self.live_preview.show()
             self._html_previewed_editors.add(editor)
+            # Restaurar cursor tras un pequeño delay
+            QTimer.singleShot(150, QApplication.restoreOverrideCursor)
         self.update_live_preview(editor)
 
     def show_live_preview(self, editor):
@@ -1166,6 +1196,17 @@ class MainWindow(QMainWindow):
                 f.writelines(lines)
         except Exception as e:
             print(f"[update_theme_font_size] Error: {e}")
+
+    def close_live_preview_background(self, file_path):
+        from PyQt5.QtCore import QTimer
+        import os
+        # Solo cierra si el live preview está mostrando ese archivo
+        if self.live_preview.last_loaded_path and os.path.normpath(self.live_preview.last_loaded_path) == os.path.normpath(file_path):
+            def do_close():
+                self.live_preview.user_minimized = True
+                self.live_preview.stop_server()
+                self.live_preview.hide()
+            QTimer.singleShot(100, do_close)
 
 from PyQt5.QtWidgets import QDockWidget, QWidget, QHBoxLayout, QLabel, QPushButton
 from PyQt5.QtCore import Qt

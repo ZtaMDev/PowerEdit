@@ -21,10 +21,7 @@ from urllib.parse import urljoin
 
 class LivePreviewDock(QDockWidget):
     def __init__(self, parent=None):
-        super().__init__("", parent)
-        self.setAllowedAreas(Qt.RightDockWidgetArea)
-        self.setFeatures(QDockWidget.NoDockWidgetFeatures)
-        self.setFloating(False)
+        # Initialize all attributes first to avoid AttributeError in showEvent
         self.user_minimized = False
         self.external_url = None
         self.auto_refresh = True
@@ -37,6 +34,11 @@ class LivePreviewDock(QDockWidget):
         self.httpd = None
         self.server_thread = None
         self.last_loaded_path = None
+
+        super().__init__("", parent)
+        self.setAllowedAreas(Qt.RightDockWidgetArea)
+        self.setFeatures(QDockWidget.NoDockWidgetFeatures)
+        self.setFloating(False)
 
         # Crear barra de título personalizada
         self.setTitleBarWidget(self._create_custom_titlebar())

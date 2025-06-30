@@ -8,7 +8,7 @@ class MinimapWidget(QWidget):
         self.editor = editor
         self.highlighter = highlighter
         self.max_lines = max_lines
-        self.left_margin = 3
+        self.left_margin = 1
         self.setMinimumWidth(90)
         self.setMaximumWidth(90)
         self.setMinimumHeight(40)
