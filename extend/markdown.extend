@@ -1,0 +1,32 @@
+{
+  "extensions": ["md", "markdown"],
+  "keywords": [
+    "#", "##", "###", "####", "#####", "######",
+    "-", "*", "+", ">", "```", "`", "---", "***"
+  ],
+  "builtins": [],
+  "comment_pattern": "<!--[\\s\\S]*?-->",
+  "string_patterns": [
+    "\"(\\\\.|[^\"\\\\])*\"",
+    "'(\\\\.|[^'\\\\])*'",
+    "`(?:\\.|[^\\`])*?`",
+    "`[^`]*`"
+  ],
+  "multi_line_strings": [
+    {
+      "start": "```",
+      "end": "```"
+    }
+  ],
+  "function_pattern": null,
+  "module_pattern": null,
+  "colors": {
+    "keyword":  "#569CD6",
+    "string":   "#CE9178",
+    "function": "#DCDCAA",
+    "module":   "#4EC9B0",
+    "builtin":  "#C586C0",
+    "comment":  "#6A9955",
+    "self":     "#9CDCFE"
+  }
+}

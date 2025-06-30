@@ -282,9 +282,9 @@ class TabsManager(QTabWidget):
                 msgbox.setText("This file has unsaved changes\n¿You want to save it before?")
                 msgbox.setIcon(QMessageBox.Warning)
 
-                guardar_btn = msgbox.addButton("Guardar", QMessageBox.AcceptRole)
-                descartar_btn = msgbox.addButton("Descartar cambios", QMessageBox.DestructiveRole)
-                cancelar_btn = msgbox.addButton("Cancelar", QMessageBox.RejectRole)
+                guardar_btn = msgbox.addButton("Save", QMessageBox.AcceptRole)
+                descartar_btn = msgbox.addButton("Discard changes", QMessageBox.DestructiveRole)
+                cancelar_btn = msgbox.addButton("Cancel", QMessageBox.RejectRole)
 
                 msgbox.setStyleSheet("""
                     QMessageBox {

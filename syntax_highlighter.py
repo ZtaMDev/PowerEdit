@@ -30,6 +30,7 @@ class GenericHighlighter(QSyntaxHighlighter):
 
         is_css = "css" in rules.get("extensions", [])
         is_html = "html" in rules.get("extensions", [])
+        is_md = "markdown" in rules.get("extensions", [])
 
         # Keywords
         kw_fmt = fmt(colors.get("keyword", "#569CD6"))
@@ -69,14 +70,11 @@ class GenericHighlighter(QSyntaxHighlighter):
 
         # Functions
         fn_fmt = fmt(colors.get("function", "#50FA7B"))
-        if rules.get("function_pattern"):
-            pat = safe_regex(rules["function_pattern"])
-            if pat:
-                self.highlighting_rules.append((pat, fn_fmt))
-
-        # Comentarios
-        self.comment_fmt = fmt(colors.get("comment", "#6A9955"))
-        self.comment_pattern = safe_regex(rules.get("comment_pattern", "#.*")) or QRegularExpression("#.*")
+        if not is_html and not is_md:
+            if rules.get("function_pattern"):
+                pat = safe_regex(rules["function_pattern"])
+                if pat:
+                    self.highlighting_rules.append((pat, fn_fmt))
 
         # Strings
         self.string_patterns = []
@@ -93,6 +91,10 @@ class GenericHighlighter(QSyntaxHighlighter):
             if start and end:
                 self.multi_line_patterns.append((start, end, fmt(colors.get("string", "#CE9178"))))
 
+        # Comentarios
+        self.comment_fmt = fmt(colors.get("comment", "#6A9955"))
+        self.comment_pattern = safe_regex(rules.get("comment_pattern", "#.*")) or QRegularExpression("#.*")
+
         # Valores
         self.values = rules.get("value", [])
         self.value_fmt = fmt(colors.get("value", "#3CB371"))
@@ -103,7 +105,7 @@ class GenericHighlighter(QSyntaxHighlighter):
 
         # self y atributos (solo si no es HTML)
         self.self_format = fmt(colors.get("self", "#00BFFF"))
-        if not is_html:
+        if not is_html and not is_md:
             for pattern in [
                 r'\bself\b',
                 r'\bself\.[a-zA-Z_]\w*\b',
@@ -121,10 +123,11 @@ class GenericHighlighter(QSyntaxHighlighter):
         # Módulos
         self.modules = rules.get("modules", [])
         self.module_fmt = fmt(colors.get("module", "#2AA198")) if self.modules else None
-        self.module_patterns = [
-            safe_regex(rf'\b{re.escape(m)}\b') for m in self.modules
-        ]
-        self.module_patterns = [p for p in self.module_patterns if p]
+        if not is_html and not is_md:
+            self.module_patterns = [
+                safe_regex(rf'\b{re.escape(m)}\b') for m in self.modules
+            ]
+            self.module_patterns = [p for p in self.module_patterns if p]
 
         # Tags HTML
         self.tag_fmt = fmt(colors.get("tag", "#FF79C6")) if "tag" in colors else None
@@ -157,15 +160,15 @@ class GenericHighlighter(QSyntaxHighlighter):
     def highlightBlock(self, text):
         if not text:
             return
-
         self.setCurrentBlockState(0)
         string_regions = []
         comment_regions = []
+        url_regex = re.compile(r"https?://[^\s\"'<>`]+")
 
         def inside(pos, regions):
             return any(s <= pos < e for s, e in regions)
 
-        # 1) Cadenas normales
+        # Para cada patrón de cadena
         for pat, fmt in self.string_patterns:
             it = pat.globalMatch(text)
             while it.hasNext():
@@ -173,6 +176,33 @@ class GenericHighlighter(QSyntaxHighlighter):
                 s, l = m.capturedStart(), m.capturedLength()
                 self.setFormat(s, l, fmt)
                 string_regions.append((s, s + l))
+
+                # Obtener el contenido de la cadena actual
+                string_text = text[s:s + l]
+
+                # Buscar links dentro de la cadena
+                for match in url_regex.finditer(string_text):
+                    url_start = s + match.start()
+                    url_length = match.end() - match.start()
+
+                    # Copia el formato de string y le agrega subrayado
+                    url_fmt = QTextCharFormat(fmt)
+                    url_fmt.setFontUnderline(True)
+                    url_fmt.setUnderlineStyle(QTextCharFormat.SingleUnderline)
+
+                    self.setFormat(url_start, url_length, url_fmt)
+
+
+        # 2) Comentarios (solo si no están dentro de strings)
+        if self.comment_pattern:
+            it = self.comment_pattern.globalMatch(text)
+            while it.hasNext():
+                m = it.next()
+                s, l = m.capturedStart(), m.capturedLength()
+                inside_string = any(start <= s < end for start, end in string_regions)
+                if not inside_string:
+                    self.setFormat(s, l, self.comment_fmt)
+                    comment_regions.append((s, s + l))
 
         # 2) Cadenas multilínea
         for i, (start_e, end_e, fmt) in enumerate(self.multi_line_patterns):
@@ -187,21 +217,38 @@ class GenericHighlighter(QSyntaxHighlighter):
                     ei = em.capturedStart() + em.capturedLength()
                     self.setFormat(si, ei - si, fmt)
                     string_regions.append((si, ei))
+                    
+                    # --- Aquí detectamos URLs dentro de la cadena multilínea ---
+                    string_text = text[si:ei]
+                    for match in url_regex.finditer(string_text):
+                        url_start = si + match.start()
+                        url_length = match.end() - match.start()
+                        url_fmt = QTextCharFormat(fmt)  # copia del formato
+                        url_fmt.setFontUnderline(True)
+                        url_fmt.setUnderlineStyle(QTextCharFormat.SingleUnderline)
+                        self.setFormat(url_start, url_length, url_fmt)
+                    # ------------------------------------------------------------
+                    
                     sm = start_e.match(text, ei)
                     si = sm.capturedStart() if sm.hasMatch() else -1
                 else:
                     self.setCurrentBlockState(i + 1)
                     self.setFormat(si, len(text) - si, fmt)
                     string_regions.append((si, len(text)))
+                    
+                    # --- URLs en cadena abierta multilínea ---
+                    string_text = text[si:]
+                    for match in url_regex.finditer(string_text):
+                        url_start = si + match.start()
+                        url_length = match.end() - match.start()
+                        url_fmt = QTextCharFormat(fmt)
+                        url_fmt.setFontUnderline(True)
+                        url_fmt.setUnderlineStyle(QTextCharFormat.SingleUnderline)
+                        self.setFormat(url_start, url_length, url_fmt)
+                    # -----------------------------------------
+                    
                     break
 
-        # 3) Comentarios
-        it = self.comment_pattern.globalMatch(text)
-        while it.hasNext():
-            m = it.next()
-            s, l = m.capturedStart(), m.capturedLength()
-            self.setFormat(s, l, self.comment_fmt)
-            comment_regions.append((s, s + l))
 
         # 4) Resto de reglas (keywords, builtins, tipos…)
         for pat, fmt in self.highlighting_rules:
@@ -245,17 +292,18 @@ class GenericHighlighter(QSyntaxHighlighter):
 
         # 7) Métodos
         python_keywords = set(self.rules.get("keywords", []))
-
+        is_md = "markdown" in self.rules.get("extensions", [])
         # 7.1) Métodos
-        it = self.method_regex.globalMatch(text)
-        while it.hasNext():
-            m = it.next()
-            s, l = m.capturedStart(), m.capturedLength()
-            word = text[s:s + l]
-            if (not inside(s, string_regions)
-                    and not inside(s, comment_regions)
-                    and word not in python_keywords):
-                self.setFormat(s, l, self.method_fmt)
+        if not is_md:
+            it = self.method_regex.globalMatch(text)
+            while it.hasNext():
+                m = it.next()
+                s, l = m.capturedStart(), m.capturedLength()
+                word = text[s:s + l]
+                if (not inside(s, string_regions)
+                        and not inside(s, comment_regions)
+                        and word not in python_keywords):
+                    self.setFormat(s, l, self.method_fmt)
 
 
         # No sirve ni idea de porque...
@@ -327,6 +375,8 @@ class GenericHighlighter(QSyntaxHighlighter):
 
 
 def load_highlighter(language, document):
+    if language in ("plain", "plaintext"):
+        return None
     path = os.path.join("extend", f"{language}.extend")
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:

@@ -9,7 +9,9 @@ from indent_handler import IndentHandler
 from autocomplete_suggestions import AutoCompleteSuggestions
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout
 from minimap_widget import MinimapWidget
-
+from PyQt5.QtCore import QUrl
+from PyQt5.QtGui import QTextCursor, QTextCharFormat
+from PyQt5.Qt import QDesktopServices
 class LineNumberArea(QWidget):
     def __init__(self, editor):
         super().__init__(editor)
@@ -25,6 +27,8 @@ class EditorWidget(QPlainTextEdit):
     runRequested = pyqtSignal()
     def __init__(self, parent=None, minimap_visible=True):
         super().__init__(parent)
+        self._last_mouse_pos = None
+        self.setMouseTracking(True)
         self._minimap_width = 120  # Initialize minimap width first!
         self.language = "python"
         # Solo una vez: fuente inicial
@@ -50,11 +54,11 @@ class EditorWidget(QPlainTextEdit):
         """)
 
         # Crear Complementos
-        self.highlighter = load_highlighter("python", self.document())
-        self.autocomplete = AutoCompleteHandler("python")
-        self.indenter = IndentHandler("python")
+        self.highlighter = load_highlighter("plain", self.document())
+        self.autocomplete = AutoCompleteHandler("plain")
+        self.indenter = IndentHandler("plain")
         self.suggestions = AutoCompleteSuggestions(self)
-        self.suggestions.load_language("python")
+        self.suggestions.load_language("plain")
 
         # Línea de números
         self.line_number_area = LineNumberArea(self)
@@ -338,6 +342,13 @@ class EditorWidget(QPlainTextEdit):
                 self.suggestions.hide()
 
         super().keyPressEvent(event)
+        if event.key() == Qt.Key_Control and self._last_mouse_pos:
+            self.update_link_cursor(self._last_mouse_pos, Qt.ControlModifier)
+
+    def keyReleaseEvent(self, event):
+        super().keyReleaseEvent(event)
+        if event.key() == Qt.Key_Control and self._last_mouse_pos:
+            self.update_link_cursor(self._last_mouse_pos, Qt.NoModifier)
 
 
     def focusOutEvent(self, event):
@@ -413,3 +424,42 @@ class EditorWidget(QPlainTextEdit):
         super().ensureCursorVisible()
         # Remove any artificial limit on the horizontal scrollbar
         self.horizontalScrollBar().setMaximum(16777215)
+    
+    def mouseMoveEvent(self, event):
+        self._last_mouse_pos = event.pos()
+        self.update_link_cursor(event.pos(), event.modifiers())
+        super().mouseMoveEvent(event)
+
+
+
+    def mousePressEvent(self, event):
+        if event.modifiers() == Qt.ControlModifier and event.button() == Qt.LeftButton:
+            cursor = self.cursorForPosition(event.pos())
+            block = cursor.block()
+            text = block.text()
+            pos_in_block = cursor.position() - block.position()
+
+            url_regex = re.compile(r"https?://[^\s\"'<>`]+")
+            for match in url_regex.finditer(text):
+                start, end = match.span()
+                if start <= pos_in_block <= end:
+                    QDesktopServices.openUrl(QUrl(match.group()))
+                    return
+        super().mousePressEvent(event)
+
+    def update_link_cursor(self, pos, modifiers):
+        cursor = self.cursorForPosition(pos)
+        block = cursor.block()
+        text = block.text()
+        pos_in_block = cursor.position() - block.position()
+
+        url_regex = re.compile(r"https?://[^\s\"'<>`]+")
+        for match in url_regex.finditer(text):
+            start, end = match.span()
+            if start <= pos_in_block <= end and modifiers == Qt.ControlModifier:
+                self.viewport().setCursor(Qt.PointingHandCursor)
+                return
+        self.viewport().setCursor(Qt.IBeamCursor)
+
+
+

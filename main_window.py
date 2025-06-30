@@ -195,7 +195,7 @@ class MainWindow(QMainWindow):
                         latest = resp.json()
                         github_version = latest.get("tag_name")
                         if github_version and github_version != local_version:
-                            popup = VersionPopup(repo, github_version, self, version_path=version_path)
+                            popup = VersionPopup(repo, github_version, self, version_path=version_path, theme_css=self.current_theme_css)
                             popup.exec_()
                 except Exception as e:
                     print(f"[VersionPopup] Error: {e}")
@@ -216,7 +216,7 @@ class MainWindow(QMainWindow):
             editor.runRequested.connect(lambda: self.run_current_file(editor))
 
         elif path and path.endswith(".html"):
-            editor.set_run_button_visible(True)
+            QTimer.singleShot(3000, lambda: editor.set_run_button_visible(True))
             try:
                 editor.runRequested.disconnect()
             except TypeError:
@@ -1133,9 +1133,9 @@ class MainWindow(QMainWindow):
                 if current != saved:
                     unsaved.append(self.tabs.tabText(i))
         if unsaved:
-            msg = ("There are unsaved changes in the following tabs:\n\n" +
+            msg = ("There are unsaved changes in the following tabs: \n\n" +
                    "\n".join(unsaved) +
-                   "\n\nIf you close the application now, all unsaved changes will be lost.\n\nDo you want to exit anyway?")
+                   " \n\nIf you close the application now, all unsaved changes will be lost.\n\nDo you want to exit anyway?")
             reply = QMessageBox.warning(
                 self,
                 "Unsaved Changes",

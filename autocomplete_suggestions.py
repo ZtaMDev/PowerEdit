@@ -67,6 +67,8 @@ class AutoCompleteSuggestions(QListWidget):
 
 
     def load_language(self, lang):
+        if lang in ("plain", "plaintext"):
+            return None
         path = os.path.join("extend", f"{lang}.extend")
         if os.path.exists(path):
             with open(path, encoding="utf-8") as f:
