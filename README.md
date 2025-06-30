@@ -16,10 +16,11 @@ I’m thrilled to share **PowerEdit**, my first open-source code editor project.
 <table>
   <tr>
     <td>
-      <img src="https://github.com/user-attachments/assets/deb7261f-f9c9-4474-bca4-de2ef0fba9d3" alt="Captura 1" width="400"/>
+      <img src="https://github.com/user-attachments/assets/6d36cdc8-a05d-4f0d-9ed3-a39179e6b5d0" width="800"/>
     </td>
     <td>
       <img src="https://github.com/user-attachments/assets/d8a7ff01-c099-4947-829d-0e639b8da249" alt="Captura 2" width="400"/>
+      <img src="https://github.com/user-attachments/assets/71b8854e-5c8c-4453-b0f9-939695861504" width="400"/>
     </td>
   </tr>
 </table>
