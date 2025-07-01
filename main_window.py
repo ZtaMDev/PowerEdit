@@ -17,6 +17,13 @@ from PyQt5.QtWidgets import (
     QDialog, QLabel, QVBoxLayout, QPushButton,
     QFontComboBox, QSpinBox, QHBoxLayout, QMessageBox, QFileDialog
 )
+from PyQt5.QtWidgets import QProgressDialog, QMessageBox
+from PyQt5.QtCore import Qt
+import subprocess
+import threading
+import os
+import sys
+import sys
 import os, shutil, tempfile, re, requests, importlib.util, traceback
 from PyQt5.QtWidgets import QLineEdit, QTextEdit
 import tempfile
@@ -362,7 +369,41 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"Download/install failed:\n{e}")
 
     def install_ext_file_from_path(self, file_path):
-        # Lógica que ya tienes en install_ext_file, adaptada para usar path dado
+        def install_requirements_with_embedded_python(requirements_file, parent_widget):
+            if hasattr(sys, '_MEIPASS'):
+                base_dir = sys._MEIPASS
+            else:
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+
+            embedded_python = os.path.join(base_dir, "python_embedded", "python.exe")
+
+            if not os.path.exists(embedded_python):
+                QMessageBox.warning(parent_widget, "Missing Python",
+                                    "Embedded Python not found. Cannot install requirements.")
+                return False
+
+            progress = QProgressDialog("Installing dependencies...", None, 0, 0, parent_widget)
+            progress.setWindowModality(Qt.ApplicationModal)
+            progress.setWindowTitle("Installing")
+            progress.setCancelButton(None)
+            progress.setMinimumDuration(0)
+            progress.show()
+
+            result_holder = {"success": False}  # mutable holder to get result from thread
+
+            def run_install():
+                try:
+                    subprocess.call([embedded_python, "-m", "pip", "install", "--upgrade", "pip"])
+                    ret = subprocess.call([embedded_python, "-m", "pip", "install", "-r", requirements_file])
+                    result_holder["success"] = (ret == 0)
+                except Exception as e:
+                    print("Error installing requirements:", e)
+                    result_holder["success"] = False
+                finally:
+                    progress.close()
+
+            thread = threading.Thread(target=run_install)
+            thread.start()
         with tempfile.TemporaryDirectory() as tmp:
             with ZipFile(file_path, 'r') as z:
                 z.extractall(tmp)
@@ -387,6 +428,14 @@ class MainWindow(QMainWindow):
                 shutil.rmtree(dest)
             shutil.copytree(ext_folder, dest)
 
+            # Instalar dependencias si existe requirements.txt
+            requirements_path = os.path.join(dest, "requirements.txt")
+            if os.path.exists(requirements_path):
+                success = install_requirements_with_embedded_python(requirements_path,self)
+                if not success:
+                    QMessageBox.warning(None, "Dependency Installation",
+                                        f"Failed to install dependencies for {ext_name}")
+
             # carga solo esa extensión
             spec = importlib.util.spec_from_file_location(f"ext_{ext_name}",
                                                         os.path.join(dest, "main.py"))
@@ -401,10 +450,13 @@ class MainWindow(QMainWindow):
             for fn in ("plugin.svg", "plugin.png"):
                 p = os.path.join(dest, "icons", fn)
                 if os.path.exists(p):
-                    icon_path = p; break
+                    icon_path = p
+                    break
             self.extensions.append({
-                "name": ext_name, "enabled": enabled,
-                "description": getattr(module, "description", ""), "module": module,
+                "name": ext_name,
+                "enabled": enabled,
+                "description": getattr(module, "description", ""),
+                "module": module,
                 "path": dest,
                 "readme_path": os.path.join(dest, "README.md") if os.path.exists(os.path.join(dest, "README.md")) else None,
                 "icon_path": icon_path
@@ -473,11 +525,43 @@ class MainWindow(QMainWindow):
                 self.extensions_list.addItem(item)
 
 
+    
     def install_ext_file(self):
-        """
-        Descomprime un .ext, lo copia a extensions/<name>, carga y ejecuta esa extensión,
-        y finalmente refresca solo la lista visual.
-        """
+        def install_requirements_with_embedded_python(requirements_file, parent_widget):
+            if hasattr(sys, '_MEIPASS'):
+                base_dir = sys._MEIPASS
+            else:
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+
+            embedded_python = os.path.join(base_dir, "python_embedded", "python.exe")
+
+            if not os.path.exists(embedded_python):
+                QMessageBox.warning(parent_widget, "Missing Python",
+                                    "Embedded Python not found. Cannot install requirements.")
+                return False
+
+            progress = QProgressDialog("Installing dependencies...", None, 0, 0, parent_widget)
+            progress.setWindowModality(Qt.ApplicationModal)
+            progress.setWindowTitle("Installing")
+            progress.setCancelButton(None)
+            progress.setMinimumDuration(0)
+            progress.show()
+
+            result_holder = {"success": False}  # mutable holder to get result from thread
+
+            def run_install():
+                try:
+                    subprocess.call([embedded_python, "-m", "pip", "install", "--upgrade", "pip"])
+                    ret = subprocess.call([embedded_python, "-m", "pip", "install", "-r", requirements_file])
+                    result_holder["success"] = (ret == 0)
+                except Exception as e:
+                    print("Error installing requirements:", e)
+                    result_holder["success"] = False
+                finally:
+                    progress.close()
+
+            thread = threading.Thread(target=run_install)
+            thread.start()
         file_path, _ = QFileDialog.getOpenFileName(
             self, "Select Extension Bundle (.ext)", "", "Extension Bundles (*.ext)"
         )
@@ -520,7 +604,13 @@ class MainWindow(QMainWindow):
                     shutil.rmtree(dest)
                 shutil.copytree(ext_folder, dest)
 
-                # Cargar y ejecutar SOLO esta extensión
+                # ✅ Instalar dependencias si hay requirements.txt
+                requirements_path = os.path.join(dest, "requirements.txt")
+                if os.path.exists(requirements_path):
+                    install_requirements_with_embedded_python(requirements_path,self)
+
+
+                # Cargar y ejecutar extensión
                 import importlib.util
                 spec = importlib.util.spec_from_file_location(f"ext_{ext_name}", os.path.join(dest, "main.py"))
                 module = importlib.util.module_from_spec(spec)
@@ -552,12 +642,11 @@ class MainWindow(QMainWindow):
                 QMessageBox.information(self, "Extension Installed",
                                         f"'{ext_name}' installed successfully.")
 
-                # Solo refrescar UI
                 self.refresh_extensions_list()
 
         except Exception:
-            QMessageBox.critical(self, "Error Installing",
-                                traceback.format_exc())
+            QMessageBox.critical(self, "Error Installing", traceback.format_exc())
+
 
 
     def load_extensions_manager(self):
