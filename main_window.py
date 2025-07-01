@@ -212,14 +212,14 @@ class MainWindow(QMainWindow):
         self.extensions_detail.setWordWrap(True)
         self.extensions_detail.setAlignment(Qt.AlignTop)
 
+        self.extensions_layout.addWidget(self.extensions_detail)
         self.extensions_layout.addWidget(QLabel("Installed extensions:"))
         self.extensions_layout.addWidget(self.extensions_list)
-        self.extensions_layout.addWidget(self.extensions_detail)
 
         container.setLayout(self.extensions_layout)
         self.extensions_dock.setWidget(container)
         self.addDockWidget(Qt.RightDockWidgetArea, self.extensions_dock)
-
+        
         # Llenar la lista
         for ext in self.extensions:
             item = QListWidgetItem()
@@ -231,9 +231,103 @@ class MainWindow(QMainWindow):
             self.extensions_list.addItem(item)
 
         self.extensions_list.itemClicked.connect(self.show_extension_details)
+        
+        # Botón para instalar .ext
+        install_btn = QPushButton("Install Extension (.ext)")
+        install_btn.clicked.connect(self.install_ext_file)
 
+        # Botón para refrescar extensiones
+        refresh_btn = QPushButton("Refresh Extensions")
+        refresh_btn.clicked.connect(self.refresh_extensions_list)
+
+        self.extensions_layout.addWidget(install_btn)
+        self.extensions_layout.addWidget(refresh_btn)
         self.extensions_dock.show()
-  
+    
+    def refresh_extensions_list(self):
+        self.extensions_list.clear()
+
+        # Limpiar extensiones inexistentes del self.extensions
+        valid_extensions = []
+        for ext in self.extensions:
+            if os.path.isdir(ext["path"]) and os.path.exists(os.path.join(ext["path"], "main.py")):
+                item = QListWidgetItem()
+                icon_path = ext.get("icon_path") or "icons/plugin.svg"
+                icon = QIcon(icon_path)
+                item.setIcon(icon)
+                item.setText(ext.get("name", "Unknown"))
+                item.setData(Qt.UserRole, ext)
+                self.extensions_list.addItem(item)
+                valid_extensions.append(ext)
+            else:
+                print(f"[Extensions] 🗑️ Eliminando extensión inválida o eliminada: {ext['name']}")
+
+        self.extensions = valid_extensions
+
+        self.extensions_detail.setText("Double click on an extension to see more information")
+
+
+
+    def install_ext_file(self):
+        from PyQt5.QtWidgets import QFileDialog, QMessageBox
+        import tempfile
+        import shutil
+        from zipfile import ZipFile
+        import re
+
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select .ext file", "", "Extension Bundles (*.ext)")
+        if not file_path:
+            return
+
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                with ZipFile(file_path, 'r') as zip_ref:
+                    zip_ref.extractall(tmpdir)
+
+                # Buscar carpeta con .pext
+                ext_folder = None
+                for root, dirs, files in os.walk(tmpdir):
+                    if ".pext" in files and "main.py" in files:
+                        ext_folder = root
+                        break
+
+                if not ext_folder:
+                    QMessageBox.warning(self, "Invalid Extension", "The selected .ext file is not a valid extension.")
+                    return
+
+                # Leer nombre de la extensión desde main.py
+                main_py_path = os.path.join(ext_folder, "main.py")
+                ext_name = None
+                with open(main_py_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        match = re.match(r'^\s*name\s*=\s*["\'](.+?)["\']', line)
+                        if match:
+                            ext_name = match.group(1).strip()
+                            break
+
+                if not ext_name:
+                    QMessageBox.warning(self, "Invalid Extension", "Could not determine extension name from main.py.")
+                    return
+
+                dest_folder = os.path.join("extensions", ext_name)
+
+                if os.path.exists(dest_folder):
+                    shutil.rmtree(dest_folder)
+                shutil.copytree(ext_folder, dest_folder)
+
+                QMessageBox.information(self, "Extension Installed", f"Extension '{ext_name}' installed successfully.")
+
+                # Recargar extensiones
+                self.load_extensions_manager()
+                self.refresh_extensions_list()
+                self.toggle_extensions_manager_dock()
+
+        except Exception as e:
+            import traceback
+            QMessageBox.critical(self, "Error", f"Failed to install extension:\n\n{traceback.format_exc()}")
+
+
+
     def load_extensions_manager(self):
         self.extensions = []  # ← Lista de extensiones cargadas
 
