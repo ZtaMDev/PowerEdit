@@ -367,14 +367,24 @@ class MainWindow(QMainWindow):
             self.load_github_list()
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Download/install failed:\n{e}")
-
+    
     def install_ext_file_from_path(self, file_path):
+        def get_executable_dir():
+                if getattr(sys, 'frozen', False):
+                    # Estamos en un ejecutable PyInstaller
+                    return os.path.dirname(sys.executable)
+                else:
+                    # Estamos en un script .py normal
+                    return os.path.dirname(os.path.abspath(__file__))
+        def run_command_silently(args):
+            # Ejecuta el comando sin mostrar ventana de consola en Windows
+            creationflags = 0
+            if sys.platform == "win32":
+                creationflags = subprocess.CREATE_NO_WINDOW
+            result = subprocess.run(args, creationflags=creationflags)
+            return result.returncode
         def install_requirements_with_embedded_python(requirements_file, parent_widget):
-            if hasattr(sys, '_MEIPASS'):
-                base_dir = sys._MEIPASS
-            else:
-                base_dir = os.path.dirname(os.path.abspath(__file__))
-
+            base_dir = get_executable_dir()
             embedded_python = os.path.join(base_dir, "python_embedded", "python.exe")
 
             if not os.path.exists(embedded_python):
@@ -393,8 +403,8 @@ class MainWindow(QMainWindow):
 
             def run_install():
                 try:
-                    subprocess.call([embedded_python, "-m", "pip", "install", "--upgrade", "pip"])
-                    ret = subprocess.call([embedded_python, "-m", "pip", "install", "-r", requirements_file])
+                    run_command_silently([embedded_python, "-m", "pip", "install", "--upgrade", "pip"])
+                    ret = run_command_silently([embedded_python, "-m", "pip", "install", "-r", requirements_file])
                     result_holder["success"] = (ret == 0)
                 except Exception as e:
                     print("Error installing requirements:", e)
@@ -404,6 +414,7 @@ class MainWindow(QMainWindow):
 
             thread = threading.Thread(target=run_install)
             thread.start()
+
         with tempfile.TemporaryDirectory() as tmp:
             with ZipFile(file_path, 'r') as z:
                 z.extractall(tmp)
@@ -431,10 +442,30 @@ class MainWindow(QMainWindow):
             # Instalar dependencias si existe requirements.txt
             requirements_path = os.path.join(dest, "requirements.txt")
             if os.path.exists(requirements_path):
-                success = install_requirements_with_embedded_python(requirements_path,self)
-                if not success:
-                    QMessageBox.warning(None, "Dependency Installation",
-                                        f"Failed to install dependencies for {ext_name}")
+                base_dir = get_executable_dir()
+                embedded_python = os.path.join(base_dir, "python_embedded", "python.exe")
+
+                if not os.path.exists(embedded_python):
+                    QMessageBox.warning(self, "Missing Python", "Embedded Python not found.")
+                else:
+                    progress = QProgressDialog("Installing dependencies...", None, 0, 0, self)
+                    progress.setWindowTitle("Installing")
+                    progress.setCancelButton(None)
+                    progress.setWindowModality(Qt.ApplicationModal)
+                    progress.setMinimumDuration(0)
+                    progress.show()
+
+                    def on_finished(success):
+                        progress.close()
+                        if not success:
+                            QMessageBox.warning(self, "Dependency Installation",
+                                                f"Failed to install dependencies for {ext_name}")
+                        # Aquí puedes seguir con el resto de la instalación si lo necesitas
+
+                    thread = InstallThread(embedded_python, requirements_path)
+                    thread.finished_signal.connect(on_finished)
+                    thread.start()
+
 
             # carga solo esa extensión
             spec = importlib.util.spec_from_file_location(f"ext_{ext_name}",
@@ -461,6 +492,7 @@ class MainWindow(QMainWindow):
                 "readme_path": os.path.join(dest, "README.md") if os.path.exists(os.path.join(dest, "README.md")) else None,
                 "icon_path": icon_path
             })
+
     def uninstall_selected_extension(self):
         item = getattr(self, "selected_extension_item", None)
         if not item:
@@ -524,15 +556,26 @@ class MainWindow(QMainWindow):
                 item.setData(Qt.UserRole, ext)
                 self.extensions_list.addItem(item)
 
-
+    
     
     def install_ext_file(self):
+        def get_executable_dir():
+                if getattr(sys, 'frozen', False):
+                    # Estamos en un ejecutable PyInstaller
+                    return os.path.dirname(sys.executable)
+                else:
+                    # Estamos en un script .py normal
+                    return os.path.dirname(os.path.abspath(__file__))
+        def run_command_silently(args):
+            # Ejecuta el comando sin mostrar ventana de consola en Windows
+            creationflags = 0
+            if sys.platform == "win32":
+                creationflags = subprocess.CREATE_NO_WINDOW
+            result = subprocess.run(args, creationflags=creationflags)
+            return result.returncode
         def install_requirements_with_embedded_python(requirements_file, parent_widget):
-            if hasattr(sys, '_MEIPASS'):
-                base_dir = sys._MEIPASS
-            else:
-                base_dir = os.path.dirname(os.path.abspath(__file__))
 
+            base_dir = get_executable_dir()
             embedded_python = os.path.join(base_dir, "python_embedded", "python.exe")
 
             if not os.path.exists(embedded_python):
@@ -551,8 +594,8 @@ class MainWindow(QMainWindow):
 
             def run_install():
                 try:
-                    subprocess.call([embedded_python, "-m", "pip", "install", "--upgrade", "pip"])
-                    ret = subprocess.call([embedded_python, "-m", "pip", "install", "-r", requirements_file])
+                    run_command_silently([embedded_python, "-m", "pip", "install", "--upgrade", "pip"])
+                    ret = run_command_silently([embedded_python, "-m", "pip", "install", "-r", requirements_file])
                     result_holder["success"] = (ret == 0)
                 except Exception as e:
                     print("Error installing requirements:", e)
@@ -643,6 +686,7 @@ class MainWindow(QMainWindow):
                                         f"'{ext_name}' installed successfully.")
 
                 self.refresh_extensions_list()
+
 
         except Exception:
             QMessageBox.critical(self, "Error Installing", traceback.format_exc())
@@ -1861,3 +1905,22 @@ class CustomDockWidget(QDockWidget):
         layout.addWidget(close_btn)
 
         return bar
+from PyQt5.QtCore import QThread, pyqtSignal
+
+class InstallThread(QThread):
+    finished_signal = pyqtSignal(bool)
+
+    def __init__(self, embedded_python, requirements_path):
+        super().__init__()
+        self.embedded_python = embedded_python
+        self.requirements_path = requirements_path
+
+    def run(self):
+        try:
+            creationflags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+            subprocess.run([self.embedded_python, "-m", "pip", "install", "--upgrade", "pip"], creationflags=creationflags)
+            result = subprocess.run([self.embedded_python, "-m", "pip", "install", "-r", self.requirements_path], creationflags=creationflags)
+            self.finished_signal.emit(result.returncode == 0)
+        except Exception as e:
+            print("Install error:", e)
+            self.finished_signal.emit(False)
