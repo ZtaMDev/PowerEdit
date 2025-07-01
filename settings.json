@@ -1,11 +1,6 @@
 {
     "theme": "Default-Ideal",
-    "project_root": "C:/PRG/Repo",
-    "open_tabs": [
-        {
-            "path": "C:/Users/zonda/OneDrive/Documentos/exampleforextensions.txt",
-            "language": "plain"
-        }
-    ],
+    "project_root": "C:/PRG/Repo/PowerEdit",
+    "open_tabs": [],
     "active_tab": 0
 }

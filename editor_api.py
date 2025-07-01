@@ -227,7 +227,7 @@ class EditorAPI:
         return menu_bar.addMenu("View")
 
     def create_dock_widget(self, title, widget=None, area=Qt.RightDockWidgetArea):
-        dock = QDockWidget(title, self.main_window)
+        dock = CustomDockWidget(title, self.main_window)
         if widget is None:
             widget = QWidget()
             widget.setLayout(QVBoxLayout())
@@ -307,3 +307,56 @@ class EditorAPI:
 
     def get_pixmap(self, path):
         return QPixmap(path)
+    def add_tool_window(self, title, widget):
+        return self.create_dock_widget(title, widget)
+    
+
+from PyQt5.QtWidgets import QDockWidget, QWidget, QHBoxLayout, QLabel, QPushButton
+from PyQt5.QtCore import Qt
+
+class CustomDockWidget(QDockWidget):
+    def __init__(self, title, parent=None):
+        super().__init__("", parent)  # Dejamos el título vacío
+        self.setObjectName("CustomDock")
+        self.setFeatures(QDockWidget.DockWidgetClosable | QDockWidget.DockWidgetMovable)
+        self._custom_title = self._create_title_bar(title)
+        self.setTitleBarWidget(self._custom_title)
+
+    def _create_title_bar(self, title):
+        bar = QWidget()
+        layout = QHBoxLayout(bar)
+        layout.setContentsMargins(8, 2, 8, 2)
+
+        label = QLabel(title)
+        label.setStyleSheet("""
+            color: white;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+        """)
+
+        minimize_btn = QPushButton("—")
+        minimize_btn.setFixedSize(20, 20)
+        minimize_btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: white;
+                border: none;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                color: #FF5555;
+            }
+        """)
+        minimize_btn.clicked.connect(self.hide)
+
+        close_btn = QPushButton("✕")
+        close_btn.setFixedSize(20, 20)
+        close_btn.setStyleSheet(minimize_btn.styleSheet())
+        close_btn.clicked.connect(self.close)
+
+        layout.addWidget(label)
+        layout.addStretch()
+        layout.addWidget(minimize_btn)
+        layout.addWidget(close_btn)
+
+        return bar

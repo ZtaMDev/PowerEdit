@@ -1,0 +1,1 @@
+This is an example extension mustn't be added automaticly

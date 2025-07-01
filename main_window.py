@@ -17,6 +17,10 @@ from PyQt5.QtWidgets import (
     QDialog, QLabel, QVBoxLayout, QPushButton,
     QFontComboBox, QSpinBox, QHBoxLayout, QMessageBox, QFileDialog
 )
+from PyQt5.QtWidgets import QListWidget, QListWidgetItem
+import os
+import importlib.util
+import traceback
 import importlib.util
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QProgressDialog, QApplication
@@ -167,36 +171,136 @@ class MainWindow(QMainWindow):
         self.tabs.currentChanged.connect(self.update_run_button_for_current_tab)
         
         self.update_run_button_for_current_tab()  # inicial
-        
+
+    def show_extension_details(self, item):
+        ext = item.data(Qt.UserRole)
+        details = f"<h2>{ext.get('name', 'Sin nombre')}</h2>"
+
+        if ext.get("icon_path") and os.path.exists(ext["icon_path"]):
+            details = f'<img src="{ext["icon_path"]}" width="64" height="64"><br>' + details
+
+        readme_path = ext.get("readme_path")
+        if readme_path and os.path.exists(readme_path):
+            try:
+                with open(readme_path, "r", encoding="utf-8") as f:
+                    markdown = f.read()
+                    import markdown as md
+                    html = md.markdown(markdown)
+                    details += html
+            except Exception as e:
+                details += f"<p><i>Error leyendo README.md: {e}</i></p>"
+        else:
+            details += "<p><i>README.md no encontrado.</i></p>"
+
+        self.extensions_detail.setTextFormat(Qt.RichText)
+        self.extensions_detail.setText(details)
+
+    def toggle_extensions_manager_dock(self):
+        if hasattr(self, "extensions_dock") and self.extensions_dock:
+            self.extensions_dock.show()
+            self.extensions_dock.raise_()
+            return
+
+        self.extensions_dock = CustomDockWidget("Extensions Manager", self)
+        self.extensions_dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        self.extensions_dock.setObjectName("extensions_manager_dock")
+
+        container = QWidget()
+        self.extensions_layout = QVBoxLayout(container)
+        self.extensions_list = QListWidget()
+        self.extensions_detail = QLabel("Double click on an extension to see more information")
+        self.extensions_detail.setWordWrap(True)
+        self.extensions_detail.setAlignment(Qt.AlignTop)
+
+        self.extensions_layout.addWidget(QLabel("Installed extensions:"))
+        self.extensions_layout.addWidget(self.extensions_list)
+        self.extensions_layout.addWidget(self.extensions_detail)
+
+        container.setLayout(self.extensions_layout)
+        self.extensions_dock.setWidget(container)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.extensions_dock)
+
+        # Llenar la lista
+        for ext in self.extensions:
+            item = QListWidgetItem()
+            icon_path = ext.get("icon_path") or "icons/plugin.svg"
+            icon = QIcon(icon_path)
+            item.setIcon(icon)
+            item.setText(ext.get("name", "Unknown"))
+            item.setData(Qt.UserRole, ext)
+            self.extensions_list.addItem(item)
+
+        self.extensions_list.itemClicked.connect(self.show_extension_details)
+
+        self.extensions_dock.show()
+  
     def load_extensions_manager(self):
-        self.extensions = []
+        self.extensions = []  # ← Lista de extensiones cargadas
+
         extensions_dir = "extensions"
         if not os.path.exists(extensions_dir):
             os.makedirs(extensions_dir)
             print("[Extensions] Created extensions directory.")
 
-        for filename in os.listdir(extensions_dir):
-            if filename.endswith(".py"):
-                path = os.path.join(extensions_dir, filename)
-                spec = importlib.util.spec_from_file_location(filename[:-3], path)
-                module = importlib.util.module_from_spec(spec)
-                try:
-                    spec.loader.exec_module(module)
-                    ext_name = getattr(module, "name", filename)
-                    enabled = getattr(module, "enabled", True)
-                    api = EditorAPI(self, extension_name=ext_name)
-                    if not enabled:
-                        print(f"[Extensions] Extension '{ext_name}' detected but disabled (enabled=False).")
-                    else:
-                        if hasattr(module, "setup"):
-                            print(f"[Extensions] Loaded extension '{ext_name}'")
-                            module.setup(api)
-                        else:
-                            print(f"[Extensions] Extension '{ext_name}' does not have a setup(api) function.")
-                    self.extensions.append(module)
-                except Exception as e:
-                    print(f"[Extensions] Error loading extension '{filename}': {e}")
+        for folder in os.listdir(extensions_dir):
+            folder_path = os.path.join(extensions_dir, folder)
+            main_file = os.path.join(folder_path, "main.py")
+            readme_file = os.path.join(folder_path, "README.md")
+            icon_path = None
+            for icon_name in ("plugin.svg", "plugin.png"):
+                possible_icon = os.path.join(folder_path, "icons", icon_name)
+                if os.path.exists(possible_icon):
+                    icon_path = possible_icon
+                    break
 
+
+            if not os.path.isdir(folder_path) or not os.path.exists(main_file):
+                continue  # Ignora archivos sueltos o carpetas sin main.py
+
+            try:
+                # Cargar dinámicamente el módulo
+                spec = importlib.util.spec_from_file_location(f"ext_{folder}", main_file)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+
+                # Extraer metadatos opcionales
+                ext_name = getattr(module, "name", folder)
+                enabled = getattr(module, "enabled", True)
+                description = getattr(module, "description", "")
+                
+                # Instanciar API
+                api = EditorAPI(self, extension_name=ext_name)
+
+                if not enabled:
+                    print(f"[Extensions] Extensión '{ext_name}' detectada pero deshabilitada (enabled=False).")
+                elif hasattr(module, "setup"):
+                    module.setup(api)
+                    print(f"[Extensions] ✅ Extensión '{ext_name}' cargada.")
+                else:
+                    print(f"[Extensions] ⚠️ Extensión '{ext_name}' no tiene función setup(api).")
+
+                # Leer README si existe
+                readme = ""
+                if os.path.exists(readme_file):
+                    try:
+                        with open(readme_file, "r", encoding="utf-8") as f:
+                            readme = f.read()
+                    except:
+                        print(f"[Extensions] ⚠️ No se pudo leer README.md de '{ext_name}'.")
+
+                # Agregar extensión a la lista
+                self.extensions.append({
+                    "name": ext_name,
+                    "enabled": enabled,
+                    "description": description,
+                    "module": module,
+                    "path": folder_path,
+                    "readme_path": readme_file if os.path.exists(readme_file) else None,
+                    "icon_path": icon_path if icon_path else None
+                })
+
+            except Exception as e:
+                print(f"[Extensions] ❌ Error al cargar extensión '{folder}':\n{traceback.format_exc()}")
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -667,11 +771,17 @@ class MainWindow(QMainWindow):
         self.console_dock.visibilityChanged.connect(
             lambda visible: self.toggle_console_act.setChecked(visible)
         )
+        self.toggle_extensions_menu = QAction("Toggle Extensions")
+        self.toggle_extensions_menu.setShortcut("Ctrl+Alt+E")
+        self.toggle_extensions_menu.setChecked(False)
+        windows_menu.addAction(self.toggle_extensions_menu)
+        self.toggle_extensions_menu.triggered.connect(self.toggle_extensions_manager_dock)
 
+        #──────Menu Terminal──────────────
+        terminal_menu = menubar.addMenu("Terminal")
         self.reiniciar_consola_action = QAction("Restart Console", self)
         self.reiniciar_consola_action.triggered.connect(lambda: self.console.restart_shell(self.console.work_dir))
-
-        windows_menu.addAction(self.reiniciar_consola_action)
+        terminal_menu.addAction(self.reiniciar_consola_action)
         
         # ─── Menú Proyecto ───────────────────────────────
         project_menu = menubar.addMenu("Project")
@@ -682,7 +792,7 @@ class MainWindow(QMainWindow):
         project_menu.addAction(reselect_root_act)
 
         # ─── Menú Lenguaje ───────────────────────────────
-        lang_menu = menubar.addMenu("Highlight")
+        lang_menu = edit_menu.addMenu("Highlight")
 
         extend_folder = "extend"
         if os.path.isdir(extend_folder):
