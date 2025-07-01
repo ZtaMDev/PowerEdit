@@ -8,7 +8,9 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt, QTimer
-
+from PyQt5.QtWidgets import QProgressDialog
+from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QApplication
 name = "Extension Creator"
 enabled = True
 description = "Tool to create new extensions from a template"
@@ -35,7 +37,17 @@ def setup(api):
     path_label = QLabel(str(default_root))
     path_label.setStyleSheet("color: gray; font-size: 11px;")
     cp_layout.addWidget(path_label)
+    browse_btn = QPushButton("Browse...")
+    cp_layout.addWidget(browse_btn)
+    def on_browse():
+        folder = QFileDialog.getExistingDirectory(creator_widget, "Select folder to create extension", path_label.text())
+        if folder:
+            path_label.setText(folder)
+            check_for_existing_extension(folder)
+            refresh_extension_info()
+            switch_to_create()  # Muestra el panel Create al cambiar ruta
 
+    browse_btn.clicked.connect(on_browse)
     create_btn = QPushButton("Create Extension")
     cp_layout.addWidget(create_btn)
 
@@ -73,7 +85,7 @@ def setup(api):
     bundle_btn  = QPushButton("Create bundle")
     open_folder_btn = QPushButton("Open extension folder")
     back_btn    = QPushButton("Back to Create")
-
+    
     sp_layout.addWidget(icon_label)
     sp_layout.addWidget(extension_label)
     sp_layout.addWidget(desc_group)
@@ -245,15 +257,63 @@ def setup(api):
 
         if os.path.exists(bundle_file):
             os.remove(bundle_file)
+
+        exclude_dirs = {".git", "__pycache__", "bundle", "venv", ".venv", ".idea", ".vscode"}
+
+        # Contar total de archivos para la barra de progreso
+        files_to_add = []
+        for root, dirs, files in os.walk(path):
+            dirs[:] = [d for d in dirs if d not in exclude_dirs]
+            for fn in files:
+                files_to_add.append(os.path.join(root, fn))
+
+        total_files = len(files_to_add)
+
+        progress = QProgressDialog(f"Creating bundle '{name}.ext'...", "Cancel", 0, total_files, parent)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setMinimumDuration(0)
+        progress.setValue(0)
+
         with ZipFile(bundle_file, "w") as z:
-            for root, _, files in os.walk(path):
-                for fn in files:
-                    z.write(os.path.join(root, fn), os.path.relpath(os.path.join(root, fn), path))
-        QMessageBox.information(parent, "Bundle Created", f"Bundle saved at:\n{bundle_file}")
+            for i, abs_path in enumerate(files_to_add):
+                if progress.wasCanceled():
+                    QMessageBox.warning(parent, "Cancelled", "Bundle creation cancelled.")
+                    path_label.setText(custom_ext_dir)
+                    check_for_existing_extension(custom_ext_dir)
+                    refresh_extension_info()
+                    switch_to_create()
+                    return
+
+                rel_path = os.path.relpath(abs_path, path)
+                z.write(abs_path, rel_path)
+                progress.setValue(i + 1)
+                QApplication.processEvents()
+
+        progress.close()
+
+        size_mb = os.path.getsize(bundle_file) / (1024 * 1024)
+        QMessageBox.information(parent, "Bundle Created", f"Bundle saved at:\n{bundle_file}\nSize: {size_mb:.2f} MB")
+
         if os.name == "nt":
             os.startfile(bundle_dir)
         else:
             subprocess.Popen(["xdg-open", bundle_dir])
+
+        # Forzar reinicio completo tras crear el bundle
+
+        if is_valid_extension_folder(path):
+            path_label.setText(path)
+            check_for_existing_extension(path)
+            refresh_extension_info()
+            go_to_settings_btn.setVisible(True)
+            switch_to_settings()
+        else:
+            path_label.setText(custom_ext_dir)
+            check_for_existing_extension(custom_ext_dir)
+            refresh_extension_info()
+            go_to_settings_btn.setVisible(False)
+            switch_to_create()
+
 
     def open_folder(path):
         if os.name == "nt":
@@ -299,25 +359,33 @@ def setup(api):
 
     def on_dock_visibility_changed(visible):
         if visible:
-            # Siempre que se muestre el dock, empezar en custom_ext_dir
-            path_label.setText(custom_ext_dir)
-            check_for_existing_extension(custom_ext_dir)
-            refresh_extension_info()
-            switch_to_create()
-
-            # Después intenta actualizar si el file explorer tiene root válido
+            # Paso 1: Obtener root del file_explorer si está disponible
+            file_explorer_root = None
             if hasattr(api.main_window, "file_explorer"):
-                root = api.main_window.file_explorer.project_root or custom_ext_dir
-                if is_valid_extension_folder(root):
-                    path_label.setText(root)
-                    check_for_existing_extension(root)
-                    refresh_extension_info()
-                    switch_to_create()
+                file_explorer_root = api.main_window.file_explorer.project_root
+
+            # Paso 2: Verificar si root del file_explorer es válida
+            if file_explorer_root and is_valid_extension_folder(file_explorer_root):
+                selected_path = file_explorer_root
+            else:
+                selected_path = custom_ext_dir
+
+            # Paso 3: Actualizar UI con esa ruta
+            path_label.setText(selected_path)
+            check_for_existing_extension(selected_path)
+
+            if is_valid_extension_folder(selected_path):
+                refresh_extension_info()
+                switch_to_settings()
+            else:
+                refresh_extension_info()
+                switch_to_create()
         else:
             reset_path_if_no_pext()
 
-    dock = api.create_dock_widget("Create Extension", creator_widget)
 
+    dock = api.create_dock_widget("Extension Creator", creator_widget, shortcut="Ctrl+Alt+C")
+    dock.visibilityChanged.connect(on_dock_visibility_changed)
     # Conectamos señal del file_explorer una vez que esté listo
     def connect_project_root_signal():
         fe = getattr(api.main_window, "file_explorer", None)
@@ -347,14 +415,12 @@ def setup(api):
             fe.project_root_changed.connect(on_project_root_changed)
         else:
             print("[DEBUG] No se pudo conectar project_root_changed")
-
-    QTimer.singleShot(100, connect_project_root_signal)  # da tiempo a que se cree file_explorer
-
-    # Estado inicial
+    connect_project_root_signal()  # da tiempo a que se cree file_explorer
     path_label.setText(custom_ext_dir)
     check_for_existing_extension(custom_ext_dir)
     refresh_extension_info()
     switch_to_create()
-
     dock.hide()
+
+    
 

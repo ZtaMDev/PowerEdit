@@ -17,6 +17,12 @@ from PyQt5.QtWidgets import (
     QDialog, QLabel, QVBoxLayout, QPushButton,
     QFontComboBox, QSpinBox, QHBoxLayout, QMessageBox, QFileDialog
 )
+import os, shutil, tempfile, re, requests, importlib.util, traceback
+from PyQt5.QtWidgets import QLineEdit, QTextEdit
+import tempfile
+from zipfile import ZipFile
+from PyQt5.QtWidgets import QMenu, QAction, QToolButton
+import shutil
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 import os
 import importlib.util
@@ -41,6 +47,8 @@ from utils.download_dialog import DownloadDialog
 from PyQt5.QtCore import QThread
 import json
 from editor_api import EditorAPI
+
+GITHUB_API = "https://api.github.com/repos/ZtaMDev/poweredit-extensions/contents"
 class SettingsWriter(QThread):
     def __init__(self, settings: dict, parent=None):
         super().__init__(parent)
@@ -67,6 +75,7 @@ class MainWindow(QMainWindow):
             with open(settings_path, "w", encoding="utf-8") as f:
                 json.dump(default_settings, f, indent=4)
         super().__init__()
+        self.extensions = []
         self.setWindowIcon(QIcon("poweredit.ico"))
         self.setWindowTitle("PowerEdit")
         self.setGeometry(100, 100, 1000, 700)
@@ -208,7 +217,7 @@ class MainWindow(QMainWindow):
         container = QWidget()
         self.extensions_layout = QVBoxLayout(container)
         self.extensions_list = QListWidget()
-        self.extensions_detail = QLabel("Double click on an extension to see more information")
+        self.extensions_detail = QLabel("Click on an extension to see more information")
         self.extensions_detail.setWordWrap(True)
         self.extensions_detail.setAlignment(Qt.AlignTop)
 
@@ -219,8 +228,37 @@ class MainWindow(QMainWindow):
         container.setLayout(self.extensions_layout)
         self.extensions_dock.setWidget(container)
         self.addDockWidget(Qt.RightDockWidgetArea, self.extensions_dock)
-        
-        # Llenar la lista
+
+        # === Botón desinstalar ===
+        uninstall_btn = QPushButton("🗑️ Uninstall Extension")
+        uninstall_btn.hide()
+        uninstall_btn.setEnabled(False)
+        self.uninstall_button = uninstall_btn
+        uninstall_btn.clicked.connect(self.uninstall_selected_extension)
+
+        # === Cuando se hace clic en un item ===
+        def on_item_selected(item):
+            if item:
+                uninstall_btn.show()
+                uninstall_btn.setEnabled(True)
+                self.show_extension_details(item)
+                self.selected_extension_item = item
+
+        self.extensions_list.itemClicked.connect(on_item_selected)
+
+        # === Cuando se cambia la selección (para detectar deselección) ===
+        def on_selection_changed():
+            current = self.extensions_list.currentItem()
+            if current is None:
+                self.uninstall_button.hide()
+                self.uninstall_button.setEnabled(False)
+                self.selected_extension_item = None
+                self.extensions_detail.setText("Double click on an extension to see more information")
+
+        self.extensions_list.itemSelectionChanged.connect(on_selection_changed)
+
+
+        # === Llenar lista ===
         for ext in self.extensions:
             item = QListWidgetItem()
             icon_path = ext.get("icon_path") or "icons/plugin.svg"
@@ -230,111 +268,319 @@ class MainWindow(QMainWindow):
             item.setData(Qt.UserRole, ext)
             self.extensions_list.addItem(item)
 
-        self.extensions_list.itemClicked.connect(self.show_extension_details)
-        
-        # Botón para instalar .ext
+        # === Botones adicionales ===
         install_btn = QPushButton("Install Extension (.ext)")
         install_btn.clicked.connect(self.install_ext_file)
 
-        # Botón para refrescar extensiones
         refresh_btn = QPushButton("Refresh Extensions")
         refresh_btn.clicked.connect(self.refresh_extensions_list)
 
+        # === Añadir a layout ===
         self.extensions_layout.addWidget(install_btn)
         self.extensions_layout.addWidget(refresh_btn)
-        self.extensions_dock.show()
-    
-    def refresh_extensions_list(self):
-        self.extensions_list.clear()
+        self.extensions_layout.addWidget(uninstall_btn)
 
-        # Limpiar extensiones inexistentes del self.extensions
-        valid_extensions = []
-        for ext in self.extensions:
-            if os.path.isdir(ext["path"]) and os.path.exists(os.path.join(ext["path"], "main.py")):
-                item = QListWidgetItem()
-                icon_path = ext.get("icon_path") or "icons/plugin.svg"
-                icon = QIcon(icon_path)
+        self.extensions_layout.addWidget(QLabel("Available from GitHub:"))
+        self.github_list = QListWidget()
+        self.extensions_layout.addWidget(self.github_list)
+
+        self.github_list.itemClicked.connect(self.on_github_item_selected)
+        self.github_list.itemSelectionChanged.connect(self.on_github_selection_cleared)
+
+        # Botón para descargar de GitHub
+        self.github_install_btn = QPushButton("Download && Install from GitHub")
+        self.github_install_btn.setEnabled(False)
+        self.github_install_btn.clicked.connect(self.install_from_github)
+        self.extensions_layout.addWidget(self.github_install_btn)
+        self.extensions_list.itemClicked.connect(lambda item: self.github_list.clearSelection())
+        self.github_list.itemClicked.connect(lambda item: self.extensions_list.clearSelection())
+
+        self.extensions_dock.show()
+        self.load_github_list()
+
+    def load_github_list(self):
+        installed = {e["name"] for e in self.extensions}
+        try:
+            resp = requests.get(GITHUB_API + "/bundles")
+            resp.raise_for_status()
+            entries = resp.json()
+        except Exception as e:
+            QMessageBox.warning(self, "GitHub Error", f"Failed to fetch list: {e}")
+            return
+
+        self.github_list.clear()
+        for entry in entries:
+            name = entry["name"]
+            if not name.lower().endswith(".ext"):
+                continue
+            extname = name[:-4]
+            if extname in installed:
+                continue
+            item = QListWidgetItem(name)
+            item.setData(Qt.UserRole, entry["download_url"])
+            self.github_list.addItem(item)
+
+    def on_github_item_selected(self, item):
+        self.github_install_btn.setEnabled(bool(item))
+        # Se puede mostrar más info aquí
+
+    def on_github_selection_cleared(self):
+        if not self.github_list.currentItem():
+            self.github_install_btn.setEnabled(False)
+
+    def install_from_github(self):
+        item = self.github_list.currentItem()
+        if not item:
+            return
+        dl_url = item.data(Qt.UserRole)
+        name = item.text()[:-4]
+        confirm = QMessageBox.question(
+            self, "Install Extension",
+            f"Download and install '{name}' from GitHub?\n\nYou will need to restart PowerEdit manually.",
+            QMessageBox.Yes | QMessageBox.No)
+        if confirm != QMessageBox.Yes:
+            return
+
+        try:
+            resp = requests.get(dl_url)
+            resp.raise_for_status()
+            tmpfile = tempfile.NamedTemporaryFile(delete=False, suffix=".ext")
+            tmpfile.write(resp.content)
+            tmpfile.close()
+
+            # Usa tu método ya existente:
+            self.install_ext_file_from_path(tmpfile.name)
+
+            # Refrescar:
+            QMessageBox.information(
+                self, "Installed",
+                f"'{name}' installed. Restart PowerEdit manually to activate."
+            )
+            self.refresh_extensions_list()
+            self.load_github_list()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Download/install failed:\n{e}")
+
+    def install_ext_file_from_path(self, file_path):
+        # Lógica que ya tienes en install_ext_file, adaptada para usar path dado
+        with tempfile.TemporaryDirectory() as tmp:
+            with ZipFile(file_path, 'r') as z:
+                z.extractall(tmp)
+            ext_folder = None
+            for root, dirs, files in os.walk(tmp):
+                if ".pext" in files and "main.py" in files:
+                    ext_folder = root
+                    break
+            if not ext_folder:
+                raise Exception("Invalid extension bundle")
+            main_py = os.path.join(ext_folder, "main.py")
+            ext_name = None
+            for ln in open(main_py, encoding="utf-8"):
+                m = re.match(r'^\s*name\s*=\s*["\'](.+?)["\']', ln)
+                if m:
+                    ext_name = m.group(1)
+                    break
+            if not ext_name:
+                raise Exception("Couldn't determine extension name")
+            dest = os.path.join("extensions", ext_name)
+            if os.path.exists(dest):
+                shutil.rmtree(dest)
+            shutil.copytree(ext_folder, dest)
+
+            # carga solo esa extensión
+            spec = importlib.util.spec_from_file_location(f"ext_{ext_name}",
+                                                        os.path.join(dest, "main.py"))
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            enabled = getattr(module, "enabled", True)
+            api = EditorAPI(self, extension_name=ext_name)
+            if enabled and hasattr(module, "setup"):
+                module.setup(api)
+            # añade a memoria
+            icon_path = None
+            for fn in ("plugin.svg", "plugin.png"):
+                p = os.path.join(dest, "icons", fn)
+                if os.path.exists(p):
+                    icon_path = p; break
+            self.extensions.append({
+                "name": ext_name, "enabled": enabled,
+                "description": getattr(module, "description", ""), "module": module,
+                "path": dest,
+                "readme_path": os.path.join(dest, "README.md") if os.path.exists(os.path.join(dest, "README.md")) else None,
+                "icon_path": icon_path
+            })
+    def uninstall_selected_extension(self):
+        item = getattr(self, "selected_extension_item", None)
+        if not item:
+            return
+
+        ext = item.data(Qt.UserRole)
+        name = ext.get("name", "")
+        path = ext.get("path", "")
+
+        confirm = QMessageBox.question(
+            self, "Uninstall Extension",
+            f"Are you sure you want to uninstall the extension '{name}'?\n\nYou will need to restart PowerEdit manually.",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if confirm != QMessageBox.Yes:
+            return
+
+        try:
+            import shutil
+            shutil.rmtree(path)
+            print(f"[Extensions] ❌ Extension '{name}' removed.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to remove extension:\n\n{e}")
+            return
+
+        # Eliminar de la UI y restaurar estado
+        self.extensions_list.takeItem(self.extensions_list.row(item))
+        self.extensions_detail.setText("Click on an extension to see more information")
+        self.uninstall_button.hide()
+        self.uninstall_button.setEnabled(False)
+        self.selected_extension_item = None
+
+        deconfirm = QMessageBox.information(
+            self,
+            "Extension Uninstalled",
+            f"The extension '{name}' was uninstalled.\n\nPlease restart PowerEdit manually to fully unload it.",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if deconfirm == QMessageBox.Yes:
+            app = QApplication.instance()
+            app.quit()
+
+
+    def refresh_extensions_list(self):
+        """
+        Solo repuebla la lista visual, manteniendo self.extensions ya cargadas.
+        """
+        extensions_dir = "extensions"
+        os.makedirs(extensions_dir, exist_ok=True)
+
+        # Quitar las que borraron del disco
+        self.extensions = [e for e in self.extensions if os.path.isdir(e["path"])]
+
+        # UI
+        if hasattr(self, "extensions_list"):
+            self.extensions_list.clear()
+            for ext in self.extensions:
+                item = QListWidgetItem(ext["name"])
+                icon = QIcon(ext.get("icon_path") or "icons/plugin.svg")
                 item.setIcon(icon)
-                item.setText(ext.get("name", "Unknown"))
                 item.setData(Qt.UserRole, ext)
                 self.extensions_list.addItem(item)
-                valid_extensions.append(ext)
-            else:
-                print(f"[Extensions] 🗑️ Eliminando extensión inválida o eliminada: {ext['name']}")
-
-        self.extensions = valid_extensions
-
-        self.extensions_detail.setText("Double click on an extension to see more information")
-
 
 
     def install_ext_file(self):
-        from PyQt5.QtWidgets import QFileDialog, QMessageBox
-        import tempfile
-        import shutil
-        from zipfile import ZipFile
-        import re
-
-        file_path, _ = QFileDialog.getOpenFileName(self, "Select .ext file", "", "Extension Bundles (*.ext)")
+        """
+        Descomprime un .ext, lo copia a extensions/<name>, carga y ejecuta esa extensión,
+        y finalmente refresca solo la lista visual.
+        """
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select Extension Bundle (.ext)", "", "Extension Bundles (*.ext)"
+        )
         if not file_path:
             return
 
         try:
-            with tempfile.TemporaryDirectory() as tmpdir:
-                with ZipFile(file_path, 'r') as zip_ref:
-                    zip_ref.extractall(tmpdir)
+            with tempfile.TemporaryDirectory() as tmp:
+                with ZipFile(file_path, 'r') as z:
+                    z.extractall(tmp)
 
-                # Buscar carpeta con .pext
                 ext_folder = None
-                for root, dirs, files in os.walk(tmpdir):
+                for root, dirs, files in os.walk(tmp):
                     if ".pext" in files and "main.py" in files:
                         ext_folder = root
                         break
 
                 if not ext_folder:
-                    QMessageBox.warning(self, "Invalid Extension", "The selected .ext file is not a valid extension.")
+                    QMessageBox.warning(self, "Invalid Extension",
+                                        "The selected .ext is not a valid extension.")
                     return
 
-                # Leer nombre de la extensión desde main.py
-                main_py_path = os.path.join(ext_folder, "main.py")
+                # Leer nombre de main.py
+                main_py = os.path.join(ext_folder, "main.py")
                 ext_name = None
-                with open(main_py_path, "r", encoding="utf-8") as f:
-                    for line in f:
-                        match = re.match(r'^\s*name\s*=\s*["\'](.+?)["\']', line)
-                        if match:
-                            ext_name = match.group(1).strip()
+                with open(main_py, "r", encoding="utf-8") as f:
+                    for ln in f:
+                        m = re.match(r'^\s*name\s*=\s*["\'](.+?)["\']', ln)
+                        if m:
+                            ext_name = m.group(1)
                             break
 
                 if not ext_name:
-                    QMessageBox.warning(self, "Invalid Extension", "Could not determine extension name from main.py.")
+                    QMessageBox.warning(self, "Invalid Extension",
+                                        "Could not determine extension name.")
                     return
 
-                dest_folder = os.path.join("extensions", ext_name)
+                dest = os.path.join("extensions", ext_name)
+                if os.path.exists(dest):
+                    shutil.rmtree(dest)
+                shutil.copytree(ext_folder, dest)
 
-                if os.path.exists(dest_folder):
-                    shutil.rmtree(dest_folder)
-                shutil.copytree(ext_folder, dest_folder)
+                # Cargar y ejecutar SOLO esta extensión
+                import importlib.util
+                spec = importlib.util.spec_from_file_location(f"ext_{ext_name}", os.path.join(dest, "main.py"))
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
 
-                QMessageBox.information(self, "Extension Installed", f"Extension '{ext_name}' installed successfully.")
+                enabled = getattr(module, "enabled", True)
+                api = EditorAPI(self, extension_name=ext_name)
+                if enabled and hasattr(module, "setup"):
+                    module.setup(api)
 
-                # Recargar extensiones
-                self.load_extensions_manager()
+                # Añadir a memoria
+                icon_path = None
+                for fn in ("plugin.svg", "plugin.png"):
+                    p = os.path.join(dest, "icons", fn)
+                    if os.path.exists(p):
+                        icon_path = p
+                        break
+
+                self.extensions.append({
+                    "name": ext_name,
+                    "enabled": enabled,
+                    "description": getattr(module, "description", ""),
+                    "module": module,
+                    "path": dest,
+                    "readme_path": os.path.join(dest, "README.md") if os.path.exists(os.path.join(dest, "README.md")) else None,
+                    "icon_path": icon_path
+                })
+
+                QMessageBox.information(self, "Extension Installed",
+                                        f"'{ext_name}' installed successfully.")
+
+                # Solo refrescar UI
                 self.refresh_extensions_list()
-                self.toggle_extensions_manager_dock()
 
-        except Exception as e:
-            import traceback
-            QMessageBox.critical(self, "Error", f"Failed to install extension:\n\n{traceback.format_exc()}")
-
+        except Exception:
+            QMessageBox.critical(self, "Error Installing",
+                                traceback.format_exc())
 
 
     def load_extensions_manager(self):
-        self.extensions = []  # ← Lista de extensiones cargadas
+        import os
+        import traceback
+        import importlib.util
 
         extensions_dir = "extensions"
         if not os.path.exists(extensions_dir):
             os.makedirs(extensions_dir)
             print("[Extensions] Created extensions directory.")
+
+        # Limpiar estado interno ANTES de cargar extensiones para evitar acumulación
+        if hasattr(self, "_extension_actions"):
+            # Eliminar acciones de menú previas
+            for ext_name, actions in self._extension_actions.items():
+                for act in actions:
+                    self.menuBar().removeAction(act)
+            self._extension_actions.clear()
+        else:
+            self._extension_actions = {}
+
+        self.extensions = []
 
         for folder in os.listdir(extensions_dir):
             folder_path = os.path.join(extensions_dir, folder)
@@ -347,33 +593,39 @@ class MainWindow(QMainWindow):
                     icon_path = possible_icon
                     break
 
-
             if not os.path.isdir(folder_path) or not os.path.exists(main_file):
-                continue  # Ignora archivos sueltos o carpetas sin main.py
+                continue
 
             try:
-                # Cargar dinámicamente el módulo
                 spec = importlib.util.spec_from_file_location(f"ext_{folder}", main_file)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
 
-                # Extraer metadatos opcionales
                 ext_name = getattr(module, "name", folder)
                 enabled = getattr(module, "enabled", True)
                 description = getattr(module, "description", "")
-                
-                # Instanciar API
+
+                self._extension_actions[ext_name] = []
+
                 api = EditorAPI(self, extension_name=ext_name)
 
-                if not enabled:
-                    print(f"[Extensions] Extensión '{ext_name}' detectada pero deshabilitada (enabled=False).")
-                elif hasattr(module, "setup"):
+                if enabled and hasattr(module, "setup"):
+                    original_add_menu_action = api.add_menu_action
+
+                    def tracked_add_menu_action(path, callback):
+                        action = original_add_menu_action(path, callback)
+                        self._extension_actions[ext_name].append(action)
+                        return action
+
+                    api.add_menu_action = tracked_add_menu_action
                     module.setup(api)
                     print(f"[Extensions] ✅ Extensión '{ext_name}' cargada.")
+                elif not enabled:
+                    print(f"[Extensions] 🚫 Extensión '{ext_name}' deshabilitada.")
                 else:
-                    print(f"[Extensions] ⚠️ Extensión '{ext_name}' no tiene función setup(api).")
+                    print(f"[Extensions] ⚠️ Extensión '{ext_name}' sin setup(api).")
 
-                # Leer README si existe
+                # Leer README
                 readme = ""
                 if os.path.exists(readme_file):
                     try:
@@ -382,7 +634,6 @@ class MainWindow(QMainWindow):
                     except:
                         print(f"[Extensions] ⚠️ No se pudo leer README.md de '{ext_name}'.")
 
-                # Agregar extensión a la lista
                 self.extensions.append({
                     "name": ext_name,
                     "enabled": enabled,
@@ -395,6 +646,21 @@ class MainWindow(QMainWindow):
 
             except Exception as e:
                 print(f"[Extensions] ❌ Error al cargar extensión '{folder}':\n{traceback.format_exc()}")
+
+        # Limpiar UI visual ANTES de actualizar lista
+        if hasattr(self, "extensions_list"):
+            self.extensions_list.clear()
+            for ext in self.extensions:
+                item = QListWidgetItem()
+                icon_path = ext.get("icon_path") or "icons/plugin.svg"
+                icon = QIcon(icon_path)
+                item.setIcon(icon)
+                item.setText(ext.get("name", "Unknown"))
+                item.setData(Qt.UserRole, ext)
+                self.extensions_list.addItem(item)
+
+
+
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -865,7 +1131,7 @@ class MainWindow(QMainWindow):
         self.console_dock.visibilityChanged.connect(
             lambda visible: self.toggle_console_act.setChecked(visible)
         )
-        self.toggle_extensions_menu = QAction("Toggle Extensions")
+        self.toggle_extensions_menu = QAction("Extensions Manager", self)
         self.toggle_extensions_menu.setShortcut("Ctrl+Alt+E")
         self.toggle_extensions_menu.setChecked(False)
         windows_menu.addAction(self.toggle_extensions_menu)

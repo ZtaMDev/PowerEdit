@@ -226,20 +226,21 @@ class EditorAPI:
         # No existe, crear menú
         return menu_bar.addMenu("View")
 
-    def create_dock_widget(self, title, widget=None, area=Qt.RightDockWidgetArea):
+    def create_dock_widget(self, title, widget=None, area=Qt.RightDockWidgetArea, checkable=True, checked=False, shortcut=None):
         dock = CustomDockWidget(title, self.main_window)
         if widget is None:
             widget = QWidget()
             widget.setLayout(QVBoxLayout())
         dock.setWidget(widget)
         self.main_window.addDockWidget(area, dock)
-        dock.show()
 
         # Añadir acción al menú View para mostrar/ocultar este dock
         view_menu = self._get_or_create_view_menu()
         action = view_menu.addAction(title)
-        action.setCheckable(True)
-        action.setChecked(True)
+        action.setCheckable(checkable)
+        action.setChecked(checked)
+        if shortcut:
+            action.setShortcut(shortcut)
 
         def toggle_visibility(checked):
             dock.setVisible(checked)
