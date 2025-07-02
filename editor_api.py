@@ -342,12 +342,16 @@ class EditorAPI:
                 callback(False)
             return False
 
-        # Verificar si el módulo ya está instalado en el Python embebido
+        # Configurar flags para no mostrar consola (solo en Windows)
+        creationflags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+
+        # Verificar si el módulo ya está instalado
         try:
             result = subprocess.run(
                 [python_path, "-c", f"import {module_name}"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
+                creationflags=creationflags
             )
             if result.returncode == 0:
                 if callback:
@@ -363,7 +367,7 @@ class EditorAPI:
                 callback(False)
             return False
 
-        # Crear y mostrar ProgressBar solo si realmente es necesario instalar
+        # Mostrar progress bar solo si se va a instalar
         from PyQt5.QtWidgets import QProgressDialog
         progress = QProgressDialog(f"Installing '{module_name}'...", None, 0, 0, self.main_window)
         progress.setWindowTitle("Installing Module")
@@ -379,6 +383,7 @@ class EditorAPI:
         ))
         self._installer_thread.start()
         return None
+
 
 
     def _on_install_finished(self, module_name, success, error_msg, callback, progress):
