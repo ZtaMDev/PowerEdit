@@ -327,47 +327,59 @@ class EditorAPI:
         return self.create_dock_widget(title, widget)
     
     def require(self, module_name, auto_install=False, callback=None):
-        try:
-            __import__(module_name)
+        import subprocess
+
+        # Determinar ruta del Python embebido
+        if getattr(sys, 'frozen', False):
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            base_dir = os.path.abspath(os.path.dirname(__file__))
+        python_path = os.path.join(base_dir, "python_embedded", "python.exe")
+
+        if not os.path.exists(python_path):
+            self.show_message(f"Embedded Python not found at:\n{python_path}", "Error")
             if callback:
-                callback(True)
-            return True
-        except ImportError:
-            self.log(f"❌ Módulo '{module_name}' no encontrado.")
-            if not auto_install:
+                callback(False)
+            return False
+
+        # Verificar si el módulo ya está instalado en el Python embebido
+        try:
+            result = subprocess.run(
+                [python_path, "-c", f"import {module_name}"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            if result.returncode == 0:
                 if callback:
-                    callback(False)
-                return False
+                    callback(True)
+                return True
+        except Exception as e:
+            self.log(f"Error checking module '{module_name}': {e}")
 
-            # Buscar Python embebido
-            if getattr(sys, 'frozen', False):
-                base_dir = os.path.dirname(sys.executable)
-            else:
-                base_dir = os.path.abspath(os.path.dirname(__file__))
-            python_path = os.path.join(base_dir, "python_embedded", "python.exe")
+        self.log(f"❌ Módulo '{module_name}' no encontrado.")
 
-            if not os.path.exists(python_path):
-                self.show_message(f"Embedded Python not found at:\n{python_path}", "Error")
-                if callback:
-                    callback(False)
-                return False
+        if not auto_install:
+            if callback:
+                callback(False)
+            return False
 
-            # Create and start progress
-            from PyQt5.QtWidgets import QProgressDialog
-            progress = QProgressDialog(f"Installing '{module_name}'...", None, 0, 0, self.main_window)
-            progress.setWindowTitle("Installing Module")
-            progress.setCancelButton(None)
-            progress.setWindowModality(Qt.ApplicationModal)
-            progress.setMinimumDuration(0)
-            progress.show()
+        # Crear y mostrar ProgressBar solo si realmente es necesario instalar
+        from PyQt5.QtWidgets import QProgressDialog
+        progress = QProgressDialog(f"Installing '{module_name}'...", None, 0, 0, self.main_window)
+        progress.setWindowTitle("Installing Module")
+        progress.setCancelButton(None)
+        progress.setWindowModality(Qt.ApplicationModal)
+        progress.setMinimumDuration(0)
+        progress.show()
 
-            # Crear hilo de instalación
-            self._installer_thread = ModuleInstaller(python_path, module_name)
-            self._installer_thread.finished.connect(lambda success, error: self._on_install_finished(
-                module_name, success, error, callback, progress
-            ))
-            self._installer_thread.start()
-            return None  # El resultado se devolverá por callback
+        # Crear hilo de instalación
+        self._installer_thread = ModuleInstaller(python_path, module_name)
+        self._installer_thread.finished.connect(lambda success, error: self._on_install_finished(
+            module_name, success, error, callback, progress
+        ))
+        self._installer_thread.start()
+        return None
+
 
     def _on_install_finished(self, module_name, success, error_msg, callback, progress):
         progress.close()

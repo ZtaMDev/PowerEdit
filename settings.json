@@ -1,0 +1,15 @@
+{
+    "theme": "Default-Ideal",
+    "project_root": "C:\\PRG\\Repo\\PowerEdit\\extensions\\Extension_Creator\\customext\\TestRequests",
+    "open_tabs": [
+        {
+            "path": "C:\\PRG\\Repo\\PowerEdit\\extensions\\Extension_Creator\\customext\\TestRequests\\main.py",
+            "language": "python"
+        },
+        {
+            "path": "C:/PRG/Repo/PowerEdit/extensions/Extension_Creator/customext/TestRequests/README.md",
+            "language": "markdown"
+        }
+    ],
+    "active_tab": 0
+}
