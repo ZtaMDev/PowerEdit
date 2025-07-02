@@ -11,7 +11,6 @@ I’m thrilled to share **PowerEdit**, my first open-source code editor project.
 - **Report** any bugs or quirks you encounter  
 
 
-
 ---
 <table>
   <tr>
@@ -25,6 +24,8 @@ I’m thrilled to share **PowerEdit**, my first open-source code editor project.
   </tr>
 </table>
 
+---
+
 ## 📥 How to download PowerEdit
 
 1. Go to the section [**Releases**](https://github.com/ztamdev/PowerEdit/releases) of this repository.  
@@ -32,18 +33,50 @@ I’m thrilled to share **PowerEdit**, my first open-source code editor project.
 3. Run the .exe installer:
    ```bash
    PowerEdit-Setup-v1.0.0.exe  # Windows
+   ```
+
+
+---
+## Lastest Release Notes:
+
+## Added Features
+
+### ✅ New EditorAPI
+A powerful and easy-to-use **EditorAPI** has been added. This API allows the creation of editor extensions with great simplicity.  
+The API is included in the project files here: [EditorAPI File](https://github.com/ZtaMDev/PowerEdit/blob/main/editor_api.py)  
+It allows extensions to:
+- Modify editor behaviors
+- Add custom menus and buttons
+- Access parameters from the current editor session
+- And much more...
+
+Full documentation will be available soon at:  
+[https://ztamdev.github.io/PowerEdit/](https://ztamdev.github.io/PowerEdit/)
 
 ---
 
-## ✨ Why PowerEdit Matters
+### New Extensions Manager Menu
+A brand-new **Extensions Manager** menu is now available. It allows you to:
+- Install and uninstall extensions either locally (with `.ext` extension bundles)
+- Or from the official Power Edit Extensions Repository:  
+  [https://github.com/ZtaMDev/poweredit-extensions](https://github.com/ZtaMDev/poweredit-extensions)
 
-- **Simple, intuitive UI** built with PyQt5  
-- **Fully customizable** via `.theme` and `.extend` files  
-- **Integrated Update Manager** keeps you on the latest version  
-- **Source Downloader** under **Help → Download Source**  
-  > Instantly pull the entire codebase (I recommend VS Code for editing until indentation issues are ironed out!)
+You can now also **view detailed information** about any installed extension directly from the manager.
 
 ---
+
+### New Extension: Extension Creator
+This new tool makes it incredibly easy to create extensions through a graphical interface.
+
+Features include:
+- Set a title and description for your extension
+- Automatically generate an `.ext` extension bundle
+- Display important metadata about the extension
+- If your extension requires additional Python modules, simply include a `requirements.txt` in your extension folder.  
+  These modules will be automatically installed in the embedded Python environment during installation.
+
+---
+
 
 ## 🔧 How You Can Help
 
@@ -59,7 +92,7 @@ We welcome contributions! Please read our [Contributing Guide](https://github.co
 
 ---
 
-## 📋 Key Features
+## 📋Start Key Features
 
 > Note If you will to know the last updates and features go to the [**Releases**](https://github.com/ztamdev/PowerEdit/releases) page.
 
