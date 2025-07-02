@@ -1,3 +1,18 @@
+import sys
+import os
+
+# Inyectar site-packages del Python embebido si estamos usando PyInstaller
+if getattr(sys, 'frozen', False):
+    base_dir = os.path.dirname(sys.executable)
+else:
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+
+embedded_site_packages = os.path.join(base_dir, "python_embedded", "Lib", "site-packages")
+
+if os.path.exists(embedded_site_packages) and embedded_site_packages not in sys.path:
+    sys.path.insert(0, embedded_site_packages)
+    print("[EditorAPI] ✔ site-packages del Python embebido inyectado.")
+
 from PyQt5.QtWidgets import (
     QApplication,
     QMessageBox,
@@ -17,7 +32,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QObject, QSize
 from PyQt5.QtGui import QIcon, QPixmap, QTextCursor
-
+import subprocess
 
 class EditorAPI:
     def __init__(self, main_window, extension_name="UnknownExtension"):
@@ -311,6 +326,58 @@ class EditorAPI:
     def add_tool_window(self, title, widget):
         return self.create_dock_widget(title, widget)
     
+    def require(self, module_name, auto_install=False, callback=None):
+        try:
+            __import__(module_name)
+            if callback:
+                callback(True)
+            return True
+        except ImportError:
+            self.log(f"❌ Módulo '{module_name}' no encontrado.")
+            if not auto_install:
+                if callback:
+                    callback(False)
+                return False
+
+            # Buscar Python embebido
+            if getattr(sys, 'frozen', False):
+                base_dir = os.path.dirname(sys.executable)
+            else:
+                base_dir = os.path.abspath(os.path.dirname(__file__))
+            python_path = os.path.join(base_dir, "python_embedded", "python.exe")
+
+            if not os.path.exists(python_path):
+                self.show_message(f"Embedded Python not found at:\n{python_path}", "Error")
+                if callback:
+                    callback(False)
+                return False
+
+            # Create and start progress
+            from PyQt5.QtWidgets import QProgressDialog
+            progress = QProgressDialog(f"Installing '{module_name}'...", None, 0, 0, self.main_window)
+            progress.setWindowTitle("Installing Module")
+            progress.setCancelButton(None)
+            progress.setWindowModality(Qt.ApplicationModal)
+            progress.setMinimumDuration(0)
+            progress.show()
+
+            # Crear hilo de instalación
+            self._installer_thread = ModuleInstaller(python_path, module_name)
+            self._installer_thread.finished.connect(lambda success, error: self._on_install_finished(
+                module_name, success, error, callback, progress
+            ))
+            self._installer_thread.start()
+            return None  # El resultado se devolverá por callback
+
+    def _on_install_finished(self, module_name, success, error_msg, callback, progress):
+        progress.close()
+        if success:
+            self.log(f"✅ MModule '{module_name}' installed successfully.")
+        else:
+            self.show_message(f"Failed to install '{module_name}':\n{error_msg}", "Error")
+        if callback:
+            callback(success)
+    
 
 from PyQt5.QtWidgets import QDockWidget, QWidget, QHBoxLayout, QLabel, QPushButton
 from PyQt5.QtCore import Qt
@@ -361,3 +428,30 @@ class CustomDockWidget(QDockWidget):
         layout.addWidget(close_btn)
 
         return bar
+
+
+from PyQt5.QtCore import QThread, pyqtSignal
+
+class ModuleInstaller(QThread):
+    finished = pyqtSignal(bool, str)
+
+    def __init__(self, python_path, module_name):
+        super().__init__()
+        self.python_path = python_path
+        self.module_name = module_name
+
+    def run(self):
+        import subprocess
+        try:
+            creationflags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+            result = subprocess.run(
+                [self.python_path, "-m", "pip", "install", self.module_name],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                creationflags=creationflags
+            )
+            success = result.returncode == 0
+            error_msg = result.stderr.decode() if not success else ""
+            self.finished.emit(success, error_msg)
+        except Exception as e:
+            self.finished.emit(False, str(e))

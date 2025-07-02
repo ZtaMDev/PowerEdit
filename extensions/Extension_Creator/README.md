@@ -1,1 +1,1 @@
-This is the extension creator
+Tool to create new power edit extensions from a template
