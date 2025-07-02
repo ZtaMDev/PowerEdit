@@ -343,7 +343,10 @@ class EditorAPI:
             return False
 
         # Configurar flags para no mostrar consola (solo en Windows)
-        creationflags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+        startupinfo = None
+        if sys.platform == "win32":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
         # Verificar si el módulo ya está instalado
         try:
@@ -351,7 +354,7 @@ class EditorAPI:
                 [python_path, "-c", f"import {module_name}"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                creationflags=creationflags
+                startupinfo=startupinfo
             )
             if result.returncode == 0:
                 if callback:
